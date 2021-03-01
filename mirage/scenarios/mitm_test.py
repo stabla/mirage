@@ -1,5 +1,6 @@
 from mirage.core import scenario
 from mirage.libs import io,ble,bt,utils
+
 	
 def logger(name,packet):
   io.info("SCENARIO: Signal comes from " + name)
@@ -17,55 +18,24 @@ class mitm_test(scenario.Scenario):
     self.a2mReceiver = self.module.a2mReceiver 
     io.info("MITM started !")
 
-  def onMasterWriteRequest(self,packet):
-    logger("Write Request is received (from master)",packet)
+  def onMasterWriteCommand(self,packet):
+    if packet.handle == 0x29 and 0x2 in packet.value:
+      io.info("End Bip command send from master")
+      #Not necessarry finally just never send the request
+      #self.a2sEmitter.sendp(ble.BLEErrorResponse(handle=packet.handle))
+      return False
+    elif packet.handle == 0x25 and 0x0 in packet.value:
+      io.info("Shut Bip command send from master")
+    else:
+      io.info("Unknown command send from master")
 
-  def onSlaveWriteRequest(self,packet):
-    logger("Write Request is received (from slave)",packet)
-
-  def onMasterReadRequest(self,packet):
-    logger("Read Request is received (from master)",packet)
-
-  def onMasterReadBlobRequest(self,packet):
-    logger("Read Blob Request (from master) ",packet)
-    return drop()
-
-  def onSlaveReadBlobResponse(self,packet):
-    logger("Read Blob Response (from slave)",packet)
-    return drop()
+  def onSlaveHandleValueNotification(self,packet):
+    if packet.handle == 0x25 and 0x1 in packet.value:
+      packet.show()
+      io.info("Notification send from slave")
+      #Drop notifications from slave
+      self.a2mEmitter.sendp(ble.BLEErrorResponse(handle=packet.handle))
+      return False
 
   def onEnd(self):
     io.info("MITM started")
-
-  def onMasterReadByGroupTypeRequest(self,packet):
-    logger("Read By Group Type Request (from master)",packet)
-  
-  def onSlaveReadByGroupTypeResponse(self,packet):
-    logger("Read By Group Type Response (from slave)",packet)
-
-  def onMasterReadByTypeRequest(self,packet):
-    logger("Read By Type Request (from master)",packet)
-  
-  def onSlaveReadByTypeResponse(self,packet):
-    logger("Read By Type Response (from slave)",packet)
-
-  def onMasterFindByTypeValueRequest(self,packet):
-      logger("Find Type By Value Request (from master)",packet)
-
-  def onSlaveFindByTypeValueResponse(self,packet):
-    logger("Find Type By Value Response (from slave)",packet)
-
-    #Remaining Signal to manage
-      # onMasterExchangeMTURequest
-      # onSlaveExchangeMTUResponse
-      # onSlaveErrorResponse
-      # onSlaveHandleValueNotification
-      # onSlaveHandleValueIndication
-      # onMasterHandleValueConfirmation
-      # onMasterFindInformationRequest
-      # onSlaveFindInformationResponse
-      # onMasterPairingRequest
-      # onSlavePairingResponse
-      # onMasterPairingConfirm
-      # onSlavePairingConfirm
-    

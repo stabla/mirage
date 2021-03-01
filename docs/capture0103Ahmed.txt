@@ -1,0 +1,308 @@
+➜  mirage git:(master) ✗ ./executeMiTmWithScenario.sh FC:58:FA:04:04:13
+[INFO] Module ble_mitm loaded !
+[SUCCESS] HCI Device (hci0) successfully instanciated !
+[SUCCESS] HCI Device (hci1) successfully instanciated !
+[INFO] Scenario loaded !
+[INFO] MITM started !
+[INFO] Entering SCAN stage ...
+[PACKET] << BLE - Advertisement Packet | type=ADV_IND | addr=50:6E:CF:4D:78:24 | data=02011a020a0c0aff4c001005031c86df37 >>
+[PACKET] << BLE - Advertisement Packet | type=SCAN_RSP | addr=50:6E:CF:4D:78:24 | data= >>
+[PACKET] << BLE - Advertisement Packet | type=ADV_IND | addr=5B:89:C2:65:9F:EC | data=02011a020a0c0bff4c001006171a55ce0474 >>
+[PACKET] << BLE - Advertisement Packet | type=SCAN_RSP | addr=5B:89:C2:65:9F:EC | data= >>
+[PACKET] << BLE - Advertisement Packet | type=ADV_IND | addr=7D:52:70:81:52:F4 | data=02011a020a0c0aff4c00100503188c0309 >>
+[PACKET] << BLE - Advertisement Packet | type=SCAN_RSP | addr=7D:52:70:81:52:F4 | data= >>
+[PACKET] << BLE - Advertisement Packet | type=ADV_IND | addr=4E:87:40:D0:AA:09 | data=1eff060001092002a1da3954462a5dd5e2c69836cbfae6f43de9691a13fb27 >>
+[PACKET] << BLE - Advertisement Packet | type=ADV_IND | addr=33:B0:0E:BA:B1:92 | data=1eff0600010920029d623cfa80bdd5f25278711e9405c0aab1463299392a2c >>
+[PACKET] << BLE - Advertisement Packet | type=ADV_IND | addr=67:4C:6C:9B:3A:4B | data=0201060aff4c0010054e1cb7d1e9 >>
+[PACKET] << BLE - Advertisement Packet | type=SCAN_RSP | addr=67:4C:6C:9B:3A:4B | data= >>
+[PACKET] << BLE - Advertisement Packet | type=ADV_IND | addr=46:F0:A2:CD:F7:BC | data=02011a020a0c0bff4c0010064e1e5a67906b >>
+[PACKET] << BLE - Advertisement Packet | type=SCAN_RSP | addr=46:F0:A2:CD:F7:BC | data= >>
+[PACKET] << BLE - Advertisement Packet | type=ADV_IND | addr=5C:49:7D:AA:73:8F | data=02011a1bff7500420401014f5c497daa738f5e497d2d738e24000000000000 >>
+[PACKET] << BLE - Advertisement Packet | type=ADV_IND | addr=C0:28:8D:89:D3:F2 | data=0201060208001107757ed3e418284a0c8362c229c3a6da72 >>
+[PACKET] << BLE - Advertisement Packet | type=SCAN_RSP | addr=C0:28:8D:89:D3:F2 | data=07ffc0288d89d3f2 >>
+[PACKET] << BLE - Advertisement Packet | type=ADV_IND | addr=E5:D1:CE:6C:CF:9F | data=0201061bff570100f8473da9c285c1edd7220e0483f73c5d01e5d1ce6ccf9f >>
+[PACKET] << BLE - Advertisement Packet | type=SCAN_RSP | addr=E5:D1:CE:6C:CF:9F | data=0a094d692042616e6420330302e0fe >>
+[PACKET] << BLE - Advertisement Packet | type=ADV_IND | addr=C7:BA:CD:6A:53:6A | data=0709534d492d4d31031900000201060f1695fe3120a101006a536acdbac70d >>
+[PACKET] << BLE - Advertisement Packet | type=SCAN_RSP | addr=C7:BA:CD:6A:53:6A | data=07030a180100301512ff5500736f6f636172656d31c7bacd6a536a >>
+[PACKET] << BLE - Advertisement Packet | type=SCAN_RSP | addr=5C:49:7D:AA:73:8F | data=020a091b085b54565d2053616d73756e672035205365726965732028333229 >>
+[PACKET] << BLE - Advertisement Packet | type=ADV_IND | addr=2A:02:49:DD:39:FE | data=1eff0600010920027b034c5d1445b4c67fe46ddfcb2b44ad7d9ad3b7eb94ab >>
+[PACKET] << BLE - Advertisement Packet | type=ADV_IND | addr=65:0A:7A:F2:43:16 | data=1eff060001092002c6a5d44eab5b0096a37bbb23bc3b715aa6b0e44e436275 >>
+[PACKET] << BLE - Advertisement Packet | type=ADV_IND | addr=42:B9:F0:E1:88:F8 | data=02011a020a0c0aff4c0010054d1c73a12b >>
+[PACKET] << BLE - Advertisement Packet | type=ADV_IND | addr=69:B8:69:D5:11:E9 | data=0201060aff4c001005071c81fb71 >>
+[PACKET] << BLE - Advertisement Packet | type=ADV_IND | addr=45:0A:E7:29:71:9A | data=02011a020a0c0aff4c001005031c17232f >>
+[PACKET] << BLE - Advertisement Packet | type=SCAN_RSP | addr=45:0A:E7:29:71:9A | data= >>
+[PACKET] << BLE - Advertisement Packet | type=ADV_IND | addr=46:00:9C:BA:8A:DB | data=02011a020a080aff4c001005661cec0679 >>
+[PACKET] << BLE - Advertisement Packet | type=SCAN_RSP | addr=46:00:9C:BA:8A:DB | data= >>
+[PACKET] << BLE - Advertisement Packet | type=ADV_IND | addr=A8:66:7F:14:70:E3 | data=02010607ff4c0010024e0c >>
+[PACKET] << BLE - Advertisement Packet | type=SCAN_RSP | addr=A8:66:7F:14:70:E3 | data= >>
+[PACKET] << BLE - Advertisement Packet | type=SCAN_RSP | addr=69:B8:69:D5:11:E9 | data= >>
+[PACKET] << BLE - Advertisement Packet | type=ADV_IND | addr=FC:58:FA:04:04:13 | data=0201060503e0ff02180709485431343037 >>
+[SUCCESS] Found corresponding advertisement !
+[PACKET] << BLE - Advertisement Packet | type=SCAN_RSP | addr=FC:58:FA:04:04:13 | data=0709485431343037 >>
+[INFO] Entering CLONE stage ...
+[INFO] Connecting to slave FC:58:FA:04:04:13...
+[INFO] Updating connection handle : 64
+[SUCCESS] Connected on slave : FC:58:FA:04:04:13
+[INFO] Entering WAIT_CONNECTION stage ...
+[INFO] Connection Parameter Update Request (from slave) : slaveLatency = 0 / timeoutMult = 600 / minInterval = 224 / maxInterval = 240
+[INFO] Sending a response to slave ...
+[INFO] Updating connection handle : 72
+[SUCCESS] Master connected : 7E:22:85:73:C5:18
+[INFO] Slave disconnected !
+[INFO] Changing HCI Device (hci0) Random Address to : 7E:22:85:73:C5:18
+[SUCCESS] BD Address successfully modified !
+[INFO] Connecting to slave FC:58:FA:04:04:13...
+[INFO] Updating connection handle : 64
+[INFO] Entering ACTIVE_MITM stage ...
+
+// DEBUT LECTURE SERVEUR GATT
+[INFO] SCENARIO: Signal comes from Read By Group Type Request (from master)
+[PACKET] << BLE - Read By Group Type Request Packet >>
+[INFO] Read By Group Type Request (from master) : startHandle = 0x1 / endHandle = 0xffff / uuid = 0x2800
+[INFO] Redirecting to slave ...
+[INFO] SCENARIO: Signal comes from Read By Group Type Response (from slave)
+[PACKET] << BLE - Read By Group Type Response Packet | length=6 | data=010005000018060006000118070019000a18 >>
+[INFO] Read By Group Type Response (from slave) : length = 6 / data = 010005000018060006000118070019000a18
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Group Type Request (from master)
+[PACKET] << BLE - Read By Group Type Request Packet >>
+[INFO] Read By Group Type Request (from master) : startHandle = 0x1a / endHandle = 0xffff / uuid = 0x2800
+[INFO] Redirecting to slave ...
+[INFO] SCENARIO: Signal comes from Read By Group Type Response (from slave)
+[PACKET] << BLE - Read By Group Type Response Packet | length=20 | data=1a00220000000000000000b000405104c0ff00f0 >>
+[INFO] Read By Group Type Response (from slave) : length = 20 / data = 1a00220000000000000000b000405104c0ff00f0
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Group Type Request (from master)
+[PACKET] << BLE - Read By Group Type Request Packet >>
+[INFO] Read By Group Type Request (from master) : startHandle = 0x23 / endHandle = 0xffff / uuid = 0x2800
+[INFO] Redirecting to slave ...
+[INFO] SCENARIO: Signal comes from Read By Group Type Response (from slave)
+[PACKET] << BLE - Read By Group Type Response Packet | length=6 | data=23002600e0ff270029000218 >>
+[INFO] Read By Group Type Response (from slave) : length = 6 / data = 23002600e0ff270029000218
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Group Type Request (from master)
+[PACKET] << BLE - Read By Group Type Request Packet >>
+[INFO] Read By Group Type Request (from master) : startHandle = 0x2a / endHandle = 0xffff / uuid = 0x2800
+[INFO] Redirecting to slave ...
+[INFO] Error Response (from slave) : request = 0x10 / handle = 0x2a / ecode = 0xa
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Type Request (from master)
+[PACKET] << BLE - Read By Type Request >>
+[INFO] Read By Type Request (from master) : startHandle = 0x1 / endHandle = 0x5 / uuid = 0x2802
+[INFO] Redirecting to slave ...
+[INFO] Error Response (from slave) : request = 0x8 / handle = 0x1 / ecode = 0xa
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Type Request (from master)
+[PACKET] << BLE - Read By Type Request >>
+[INFO] Read By Type Request (from master) : startHandle = 0x1 / endHandle = 0x5 / uuid = 0x2803
+[INFO] Redirecting to slave ...
+[INFO] SCENARIO: Signal comes from Read By Type Response (from slave)
+[PACKET] << BLE - Read By Type Response | data=070200020300002a0400020500012a >>
+[INFO] Read By Type Response (from slave) : data = 070200020300002a0400020500012a
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Type Request (from master)
+[PACKET] << BLE - Read By Type Request >>
+[INFO] Read By Type Request (from master) : startHandle = 0x5 / endHandle = 0x5 / uuid = 0x2803
+[INFO] Redirecting to slave ...
+[INFO] Connection Parameter Update Request (from slave) : slaveLatency = 0 / timeoutMult = 600 / minInterval = 224 / maxInterval = 240
+[INFO] Sending a response to slave ...
+[INFO] Redirecting to master ...
+[INFO] Connection Parameter Update Response (from master) : moveResult = 0
+[INFO] Error Response (from slave) : request = 0x8 / handle = 0x5 / ecode = 0xa
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Type Request (from master)
+[PACKET] << BLE - Read By Type Request >>
+[INFO] Read By Type Request (from master) : startHandle = 0x7 / endHandle = 0x19 / uuid = 0x2802
+[INFO] Redirecting to slave ...
+[INFO] Error Response (from slave) : request = 0x8 / handle = 0x7 / ecode = 0xa
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Type Request (from master)
+[PACKET] << BLE - Read By Type Request >>
+[INFO] Read By Type Request (from master) : startHandle = 0x7 / endHandle = 0x19 / uuid = 0x2803
+[INFO] Redirecting to slave ...
+[INFO] SCENARIO: Signal comes from Read By Type Response (from slave)
+[PACKET] << BLE - Read By Type Response | data=070800020900292a0a00020b00242a0c00020d00252a >>
+[INFO] Read By Type Response (from slave) : data = 070800020900292a0a00020b00242a0c00020d00252a
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Type Request (from master)
+[PACKET] << BLE - Read By Type Request >>
+[INFO] Read By Type Request (from master) : startHandle = 0xd / endHandle = 0x19 / uuid = 0x2803
+[INFO] Redirecting to slave ...
+[INFO] SCENARIO: Signal comes from Read By Type Response (from slave)
+[PACKET] << BLE - Read By Type Response | data=070e00020f00272a1000021100262a1200021300282a >>
+[INFO] Read By Type Response (from slave) : data = 070e00020f00272a1000021100262a1200021300282a
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Type Request (from master)
+[PACKET] << BLE - Read By Type Request >>
+[INFO] Read By Type Request (from master) : startHandle = 0x13 / endHandle = 0x19 / uuid = 0x2803
+[INFO] Redirecting to slave ...
+[INFO] SCENARIO: Signal comes from Read By Type Response (from slave)
+[PACKET] << BLE - Read By Type Response | data=071400021500232a16000217002a2a1800021900502a >>
+[INFO] Read By Type Response (from slave) : data = 071400021500232a16000217002a2a1800021900502a
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Type Request (from master)
+[PACKET] << BLE - Read By Type Request >>
+[INFO] Read By Type Request (from master) : startHandle = 0x19 / endHandle = 0x19 / uuid = 0x2803
+[INFO] Redirecting to slave ...
+[INFO] Error Response (from slave) : request = 0x8 / handle = 0x19 / ecode = 0xa
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Type Request (from master)
+[PACKET] << BLE - Read By Type Request >>
+[INFO] Read By Type Request (from master) : startHandle = 0x1a / endHandle = 0x22 / uuid = 0x2802
+[INFO] Redirecting to slave ...
+[INFO] Error Response (from slave) : request = 0x8 / handle = 0x1a / ecode = 0xa
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Type Request (from master)
+[PACKET] << BLE - Read By Type Request >>
+[INFO] Read By Type Request (from master) : startHandle = 0x1a / endHandle = 0x22 / uuid = 0x2803
+[INFO] Redirecting to slave ...
+[INFO] SCENARIO: Signal comes from Read By Type Response (from slave)
+[PACKET] << BLE - Read By Type Response | data=151b001c1c0000000000000000b000405104c1ff00f0 >>
+[INFO] Read By Type Response (from slave) : data = 151b001c1c0000000000000000b000405104c1ff00f0
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Type Request (from master)
+[PACKET] << BLE - Read By Type Request >>
+[INFO] Read By Type Request (from master) : startHandle = 0x1c / endHandle = 0x22 / uuid = 0x2803
+[INFO] Redirecting to slave ...
+[INFO] SCENARIO: Signal comes from Read By Type Response (from slave)
+[PACKET] << BLE - Read By Type Response | data=151f001c200000000000000000b000405104c2ff00f0 >>
+[INFO] Read By Type Response (from slave) : data = 151f001c200000000000000000b000405104c2ff00f0
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Type Request (from master)
+[PACKET] << BLE - Read By Type Request >>
+[INFO] Read By Type Request (from master) : startHandle = 0x20 / endHandle = 0x22 / uuid = 0x2803
+[INFO] Redirecting to slave ...
+[INFO] Error Response (from slave) : request = 0x8 / handle = 0x20 / ecode = 0xa
+[INFO] Redirecting to master ...
+[INFO] Find Information Request (from master) : startHandle = 0x1d / endHandle = 0x1e
+[INFO] Redirecting to slave ...
+[INFO] Find Information Response (from slave) : format = 0x1 / data = 1d0002291e000129
+[INFO] Redirecting to master ...
+[INFO] Find Information Request (from master) : startHandle = 0x21 / endHandle = 0x22
+[INFO] Redirecting to slave ...
+[INFO] Find Information Response (from slave) : format = 0x1 / data = 2100022922000129
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Type Request (from master)
+[PACKET] << BLE - Read By Type Request >>
+[INFO] Read By Type Request (from master) : startHandle = 0x23 / endHandle = 0x26 / uuid = 0x2802
+[INFO] Redirecting to slave ...
+[INFO] Error Response (from slave) : request = 0x8 / handle = 0x23 / ecode = 0xa
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Type Request (from master)
+[PACKET] << BLE - Read By Type Request >>
+[INFO] Read By Type Request (from master) : startHandle = 0x23 / endHandle = 0x26 / uuid = 0x2803
+[INFO] Redirecting to slave ...
+[INFO] SCENARIO: Signal comes from Read By Type Response (from slave)
+[PACKET] << BLE - Read By Type Response | data=072400102500e1ff >>
+[INFO] Read By Type Response (from slave) : data = 072400102500e1ff
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Type Request (from master)
+[PACKET] << BLE - Read By Type Request >>
+[INFO] Read By Type Request (from master) : startHandle = 0x25 / endHandle = 0x26 / uuid = 0x2803
+[INFO] Redirecting to slave ...
+[INFO] Error Response (from slave) : request = 0x8 / handle = 0x25 / ecode = 0xa
+[INFO] Redirecting to master ...
+[INFO] Find Information Request (from master) : startHandle = 0x26 / endHandle = 0x26
+[INFO] Redirecting to slave ...
+[INFO] Find Information Response (from slave) : format = 0x1 / data = 26000229
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Type Request (from master)
+[PACKET] << BLE - Read By Type Request >>
+[INFO] Read By Type Request (from master) : startHandle = 0x27 / endHandle = 0x29 / uuid = 0x2802
+[INFO] Redirecting to slave ...
+[INFO] Error Response (from slave) : request = 0x8 / handle = 0x27 / ecode = 0xa
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Type Request (from master)
+[PACKET] << BLE - Read By Type Request >>
+[INFO] Read By Type Request (from master) : startHandle = 0x27 / endHandle = 0x29 / uuid = 0x2803
+[INFO] Redirecting to slave ...
+[INFO] SCENARIO: Signal comes from Read By Type Response (from slave)
+[PACKET] << BLE - Read By Type Response | data=072800042900062a >>
+[INFO] Read By Type Response (from slave) : data = 072800042900062a
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read By Type Request (from master)
+[PACKET] << BLE - Read By Type Request >>
+[INFO] Read By Type Request (from master) : startHandle = 0x29 / endHandle = 0x29 / uuid = 0x2803
+[INFO] Redirecting to slave ...
+[INFO] Error Response (from slave) : request = 0x8 / handle = 0x29 / ecode = 0xa
+[INFO] Redirecting to master ...
+// FIN LECTURE SERVEUR GATT
+
+
+//DEBUT READ CARACTERISTICS
+[INFO] SCENARIO: Signal comes from Read Request is received (from master)
+[PACKET] << BLE - Read Request Packet | handle=0x3 >>
+[INFO] Read Request (from master) : handle = 0x3
+[INFO] Redirecting to slave ...
+[INFO] Read Response (from slave) : value = 
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read Request is received (from master)
+[PACKET] << BLE - Read Request Packet | handle=0x5 >>
+[INFO] Read Request (from master) : handle = 0x5
+[INFO] Redirecting to slave ...
+[INFO] Read Response (from slave) : value = 0000
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read Request is received (from master)
+[PACKET] << BLE - Read Request Packet | handle=0x9 >>
+[INFO] Read Request (from master) : handle = 0x9
+[INFO] Redirecting to slave ...
+[INFO] Read Response (from slave) : value = 42454b454e20534153
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read Request is received (from master)
+[PACKET] << BLE - Read Request Packet | handle=0xb >>
+[INFO] Read Request (from master) : handle = 0xb
+[INFO] Redirecting to slave ...
+[INFO] Read Response (from slave) : value = 424b2d424c452d312e30
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read Request is received (from master)
+[PACKET] << BLE - Read Request Packet | handle=0xd >>
+[INFO] Read Request (from master) : handle = 0xd
+[INFO] Redirecting to slave ...
+[INFO] Read Response (from slave) : value = 312e302e302e302d4c45
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read Request is received (from master)
+[PACKET] << BLE - Read Request Packet | handle=0xf >>
+[INFO] Read Request (from master) : handle = 0xf
+[INFO] Redirecting to slave ...
+[INFO] Read Response (from slave) : value = 312e302e30
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read Request is received (from master)
+[PACKET] << BLE - Read Request Packet | handle=0x11 >>
+[INFO] Read Request (from master) : handle = 0x11
+[INFO] Redirecting to slave ...
+[INFO] Read Response (from slave) : value = 362e312e32
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read Request is received (from master)
+[PACKET] << BLE - Read Request Packet | handle=0x13 >>
+[INFO] Read Request (from master) : handle = 0x13
+[INFO] Redirecting to slave ...
+[INFO] Read Response (from slave) : value = 362e332e30
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read Request is received (from master)
+[PACKET] << BLE - Read Request Packet | handle=0x15 >>
+[INFO] Read Request (from master) : handle = 0x15
+[INFO] Redirecting to slave ...
+[INFO] Read Response (from slave) : value = 123456fffe9abcde
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read Request is received (from master)
+[PACKET] << BLE - Read Request Packet | handle=0x17 >>
+[INFO] Read Request (from master) : handle = 0x17
+[INFO] Redirecting to slave ...
+[INFO] Read Response (from slave) : value = ffeeddccbbaa
+[INFO] Redirecting to master ...
+[INFO] SCENARIO: Signal comes from Read Request is received (from master)
+[PACKET] << BLE - Read Request Packet | handle=0x19 >>
+[INFO] Read Request (from master) : handle = 0x19
+[INFO] Redirecting to slave ...
+[INFO] Read Response (from slave) : value = 025e0440000003
+[INFO] Redirecting to master ...
+//FIN READ CARACTERISTICS
+
+
+//A TROUVER ce que ca veut dire
+[INFO] SCENARIO: Signal comes from Write Request is received (from master)
+[PACKET] << BLE - Write Request Packet | handle=0x26 | value=0100 >>
+[INFO] Write Request (from master) : handle = 0x26 / value = 0100
+[INFO] Redirecting to slave ...
+[INFO] Write Response (from slave)
+[INFO] Redirecting to master ...
