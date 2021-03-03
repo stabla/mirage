@@ -1,4 +1,4 @@
-from mirage.core import scenario
+from mirage.core import scenario, interpreter
 from mirage.libs import io, ble, bt, utils
 CONST_SEND_COMMAND_MASTER = "onMasterWriteBipCommand"
 
@@ -71,3 +71,43 @@ class mitm_test(scenario.Scenario):
         if(name not in self.countEvent):
             self.countEvent[name] = 0
         self.countEvent[name] += 1
+
+
+    """
+        GATT : Central
+    """
+    # Import target's GATT Server
+    def __initGATTServer(self):
+        # Use the exportGATT from ble_discover
+        # Read the file, import it here there
+            # see ble_save
+            # Can use importGATT
+        # Analyze content
+            # Can use load()
+        # Select what we need
+            # 
+        # Init our GATTServer 
+        self.server = ble.GATT_Server()
+        ...
+
+    # Import target's ATTs
+    def __initATT(self):
+        # Use the export attributes from ble_discover
+        # Read the output file, import it here
+            # See ble_slave
+            # Can use importATT
+        # Analyze content
+            # Can use load()
+        # Select what we need
+        # Init our ATT
+            # Push it to the server
+
+    # Add an ATT to our GATT Server
+    def addATT(self):
+        # Maybe
+        ...
+
+    # GATT Server transmitter
+    def runGATT(self):
+        # Manage the correspondance between real GATT and this one
+        ...
