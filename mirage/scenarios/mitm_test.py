@@ -115,7 +115,6 @@ class mitm_test(scenario.Scenario):
             m['ATT_FILE']="ATT_SLAVE_MITM"
             m.execute()
 
-
         else:
             io.fail("No active connections !") 
         
