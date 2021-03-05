@@ -1,30 +1,30 @@
 import grammarDef as bleTableGrammar
 from typing import List
-
+import csv
 
 class RuleClass:
 
-    def __init__(self, number: int = 0, action: str = '', typeCommand: str = '', handle: hex = 0x0, value: hex = 0x0):
+    def __init__(self, number: int = 1, action: str = '', typeCommand: str = '', handle: hex = 0x0, value: hex = 0x0):
         self.number = number
-        self.action = action
+        self.action = True if action == 'allow' else False
         self.typeCommand = typeCommand
         self.handle = handle
         self.value = value
 
     def __str__(self):
         # return "Number of paquets to block  -> " + str(self.number) + " \nAction to do -> " + self.action + "\nCommandBleToFilter ->" + self.typeCommand + "\nHandle To Manage ->" + self.handle + "\nHandle To Value ->" + self.value
-        return str(self.number) + " " + self.action + " " + self.typeCommand + self.handle + self.value
+        return str(self.number) + " " + str(self.action) + " " + self.typeCommand + self.handle + self.value
 
 
 class FileConfig:
 
-    def __init__(self, target: str = '', defaut: str = '', rules: list = []):
+    def __init__(self, target: str = '', default: str = '', rules: list = []):
         self.target = target
-        self.defaut = defaut
+        self.default = True if default == 'allow' else False
         self.rules = rules
 
     def __str__(self):
-        return "Target  -> " + str(self.target) + " \nDefault Action to do -> " + self.defaut + "\n" + self.printList()
+        return "Target  -> " + str(self.target) + " \nDefault Action to do -> " + str(self.default) + "\n" + self.printList()
 
     def groupCommandRules(self):
         return groupByRuleType(self.rules)
@@ -62,5 +62,10 @@ def groupByRuleType(rulesList: List[RuleClass]):
         if rule.typeCommand not in dictionnary:
             dictionnary[rule.typeCommand] = []
         dictionnary[rule.typeCommand].append(rule)
-        # dictionnary[rule.typeCommand].append(str(rule))
+    mapHandlersToCommand(dictionnary)
     return dictionnary
+
+def mapHandlersToCommand(rulesGroupedByTypes : dict) -> dict:
+    reader = csv.DictReader(open("/Users/ahmed/mirage/mirage/tables/commandsToHandlers.csv",'r'))
+    for line in reader:
+        rulesGroupedByTypes[line['handler']] = rulesGroupedByTypes.pop(line['command'])

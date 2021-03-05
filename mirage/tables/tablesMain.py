@@ -1,8 +1,8 @@
-import unittest
 import rulesManagement as rm
+import scenarioGen as sc
 
-f = rm.parseFile('ble_tables.txt')
+f = rm.parseFile('/Users/ahmed/mirage/mirage/tables/ble_tables.txt')
 d = rm.getConfigFile(f)
 a = d.groupCommandRules()
-for key,value in a.items():
-    print(key,value)
+
+sc.generateScenario(d)
