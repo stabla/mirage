@@ -1,4 +1,4 @@
-from mirage.core import scenario, interpreter
+from mirage.core import scenario, interpreter, module
 from mirage.libs import io, ble, bt, utils
 from mirage.libs.ble_utils.firewall import *
 
@@ -11,6 +11,7 @@ class mitm_test(scenario.Scenario):
         self.a2mEmitter = self.module.a2mEmitter
         self.a2mReceiver = self.module.a2mReceiver
         self.firewallManager = FirewallEventManager()
+        self.dependencies = ["ble_discover"] # for GATT
         io.info("MITM started !")
         return True
 
@@ -60,44 +61,62 @@ class mitm_test(scenario.Scenario):
         return "{0}_{1}_{2} ".format(str(handle),str(value),handlerName)
 
 
-
-'''
     """
-        GATT : Central
+        GATT CENTRAL
+
     """
-    # Import target's GATT Server
-    def __initGATTServer(self):
-        # Use the exportGATT from ble_discover
-        # Read the file, import it here there
-            # see ble_save
-            # Can use importGATT
-        # Analyze content
-            # Can use load()
-        # Select what we need
-            # 
-        # Init our GATTServer 
-        self.server = ble.GATT_Server()
+    # Initialise server GATT and run it
+    def __setGattServer(self):
         ...
 
-    # Import target's ATTs
-    def __initATT(self):
-        # Use the export attributes from ble_discover
-        # Read the output file, import it here
-            # See ble_slave
-            # Can use importATT
-        # Analyze content
-            # Can use load()
-        # Select what we need
-        # Init our ATT
-            # Push it to the server
-
-    # Add an ATT to our GATT Server
-    def addATT(self):
-        # Maybe
+    # Export heart of the function here 
+    def __getGattSlave(self):
         ...
 
-    # GATT Server transmitter
-    def runGATT(self):
-        # Manage the correspondance between real GATT and this one
-        ...
-'''
+    def onSlaveConnect(self, initiatorType="public"):
+        # Entering the GATT Entering Cloning mode
+        while (self.a2sEmitter.getMode() != "NORMAL"):
+            utils.wait(seconds=1)
+            print(self.a2sEmitter.getMode())
+            
+        address = utils.addressArg(self.args["TARGET"])
+        connectionType = self.args["CONNECTION_TYPE"]
+        self.responderAddress = address
+        self.responderAddressType = (b"\x00" if self.args["CONNECTION_TYPE"] == "public" else b"\x01")
+
+        io.info("Connecting to slave "+address+"...")
+        self.a2sEmitter.sendp(ble.BLEConnect(dstAddr=address, type=connectionType, initiatorType=initiatorType))
+
+        while not self.a2sEmitter.isConnected(): utils.wait(seconds=0.5)
+
+        # If conneced correctly, then clone the GATT Server
+        if self.a2sEmitter.isConnected():
+            io.success("Connected on slave : "+self.a2sReceiver.getCurrentConnection())
+            io.info("DISCOVER: Cloning GATT Server ")
+            # Load module
+            m = utils.loadModule('ble_discover')
+            # Set parameters
+            m["WHAT"] = "all"
+            m['INTERFACE'] = self.args['INTERFACE1']
+            m["START_HANDLE"] = "0x0001"
+            m["END_HANDLE"] = "0xFFFF"
+            m["FILTER_BY"] = ""
+            m["FILTER"] = ""
+            m['GATT_FILE']="GATT_SLAVE_MITM"
+            # Clean file - USELESS
+            ## open(m['GATT_FILE'], 'w').close()
+            # Execute to fill GATT_FILE
+            m.execute()
+
+            # Clean file - USELESS
+            # Execute to fill ATT_FILE
+            ## open(m['ATT_FILE'], 'w').close()
+            m["WHAT"] = "attributes"
+            m['ATT_FILE']="ATT_SLAVE_MITM"
+            m.execute()
+
+
+        else:
+            io.fail("No active connections !") 
+        
+        return False

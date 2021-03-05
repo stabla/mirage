@@ -1,0 +1,166 @@
+[0x0001]
+type = service
+uuid = 1800
+endhandle = 0x0005
+servicetype = primary
+
+[0x0002]
+type = characteristic
+uuid = 2a00
+permissions = Read
+value = 
+valuehandle = 0x0003
+
+[0x0004]
+type = characteristic
+uuid = 2a01
+permissions = Read
+value = 0000
+valuehandle = 0x0005
+
+[0x0006]
+type = service
+uuid = 1801
+endhandle = 0x0006
+servicetype = primary
+
+[0x0007]
+type = service
+uuid = 180a
+endhandle = 0x0019
+servicetype = primary
+
+[0x0008]
+type = characteristic
+uuid = 2a29
+permissions = Read
+value = 42454b454e20534153
+valuehandle = 0x0009
+
+[0x000a]
+type = characteristic
+uuid = 2a24
+permissions = Read
+value = 424b2d424c452d312e30
+valuehandle = 0x000b
+
+[0x000c]
+type = characteristic
+uuid = 2a25
+permissions = Read
+value = 312e302e302e302d4c45
+valuehandle = 0x000d
+
+[0x000e]
+type = characteristic
+uuid = 2a27
+permissions = Read
+value = 312e302e30
+valuehandle = 0x000f
+
+[0x0010]
+type = characteristic
+uuid = 2a26
+permissions = Read
+value = 362e312e32
+valuehandle = 0x0011
+
+[0x0012]
+type = characteristic
+uuid = 2a28
+permissions = Read
+value = 362e332e30
+valuehandle = 0x0013
+
+[0x0014]
+type = characteristic
+uuid = 2a23
+permissions = Read
+value = 123456fffe9abcde
+valuehandle = 0x0015
+
+[0x0016]
+type = characteristic
+uuid = 2a2a
+permissions = Read
+value = ffeeddccbbaa
+valuehandle = 0x0017
+
+[0x0018]
+type = characteristic
+uuid = 2a50
+permissions = Read
+value = 025e0440000003
+valuehandle = 0x0019
+
+[0x001a]
+type = service
+uuid = f000ffc004514000b000000000000000
+endhandle = 0x0022
+servicetype = primary
+
+[0x001b]
+type = characteristic
+uuid = f000ffc104514000b000000000000000
+permissions = Notify,Write,Write Without Response
+value = 
+valuehandle = 0x001c
+
+[0x001d]
+type = descriptor
+uuid = 2902
+value = 0000
+
+[0x001e]
+type = descriptor
+uuid = 2901
+value = 496d67204964656e7469667900
+
+[0x001f]
+type = characteristic
+uuid = f000ffc204514000b000000000000000
+permissions = Notify,Write,Write Without Response
+value = 
+valuehandle = 0x0020
+
+[0x0021]
+type = descriptor
+uuid = 2902
+value = 0000
+
+[0x0022]
+type = descriptor
+uuid = 2901
+value = 496d6720426c6f636b00
+
+[0x0023]
+type = service
+uuid = ffe0
+endhandle = 0x0026
+servicetype = primary
+
+[0x0024]
+type = characteristic
+uuid = ffe1
+permissions = Notify
+value = 
+valuehandle = 0x0025
+
+[0x0026]
+type = descriptor
+uuid = 2902
+value = 0000
+
+[0x0027]
+type = service
+uuid = 1802
+endhandle = 0x0029
+servicetype = primary
+
+[0x0028]
+type = characteristic
+uuid = 2a06
+permissions = Write Without Response
+value = 
+valuehandle = 0x0029
+

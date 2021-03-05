@@ -1,0 +1,164 @@
+[0x0001]
+type = 2800
+value = 0018
+
+[0x0002]
+type = 2803
+value = 020300002a
+
+[0x0003]
+type = 2a00
+value = 
+
+[0x0004]
+type = 2803
+value = 020500012a
+
+[0x0005]
+type = 2a01
+value = 0000
+
+[0x0006]
+type = 2800
+value = 0118
+
+[0x0007]
+type = 2800
+value = 0a18
+
+[0x0008]
+type = 2803
+value = 020900292a
+
+[0x0009]
+type = 2a29
+value = 42454b454e20534153
+
+[0x000a]
+type = 2803
+value = 020b00242a
+
+[0x000b]
+type = 2a24
+value = 424b2d424c452d312e30
+
+[0x000c]
+type = 2803
+value = 020d00252a
+
+[0x000d]
+type = 2a25
+value = 312e302e302e302d4c45
+
+[0x000e]
+type = 2803
+value = 020f00272a
+
+[0x000f]
+type = 2a27
+value = 312e302e30
+
+[0x0010]
+type = 2803
+value = 021100262a
+
+[0x0011]
+type = 2a26
+value = 362e312e32
+
+[0x0012]
+type = 2803
+value = 021300282a
+
+[0x0013]
+type = 2a28
+value = 362e332e30
+
+[0x0014]
+type = 2803
+value = 021500232a
+
+[0x0015]
+type = 2a23
+value = 123456fffe9abcde
+
+[0x0016]
+type = 2803
+value = 0217002a2a
+
+[0x0017]
+type = 2a2a
+value = ffeeddccbbaa
+
+[0x0018]
+type = 2803
+value = 021900502a
+
+[0x0019]
+type = 2a50
+value = 025e0440000003
+
+[0x001a]
+type = 2800
+value = 00000000000000b000405104c0ff00f0
+
+[0x001b]
+type = 2803
+value = 1c1c0000000000000000b000405104c1ff00f0
+
+[0x001c]
+type = f000ffc104514000b000000000000000
+value = 
+
+[0x001d]
+type = 2902
+value = 0000
+
+[0x001e]
+type = 2901
+value = 496d67204964656e7469667900
+
+[0x001f]
+type = 2803
+value = 1c200000000000000000b000405104c2ff00f0
+
+[0x0020]
+type = f000ffc204514000b000000000000000
+value = 
+
+[0x0021]
+type = 2902
+value = 0000
+
+[0x0022]
+type = 2901
+value = 496d6720426c6f636b00
+
+[0x0023]
+type = 2800
+value = e0ff
+
+[0x0024]
+type = 2803
+value = 102500e1ff
+
+[0x0025]
+type = ffe1
+value = 
+
+[0x0026]
+type = 2902
+value = 0000
+
+[0x0027]
+type = 2800
+value = 0218
+
+[0x0028]
+type = 2803
+value = 042900062a
+
+[0x0029]
+type = 2a06
+value = 
+
