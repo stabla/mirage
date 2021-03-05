@@ -1,5 +1,5 @@
 from pypeg2 import Enum, K, Keyword, List, Symbol, Namespace, csl, name, word, optional, endl, some, attr, blank,parse
-#TODO: CONSTANTS
+
 class Header:
     grammar = K("BLE_TABLES")
 class Target:

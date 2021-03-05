@@ -1,5 +1,6 @@
 from mirage.core import scenario, interpreter
 from mirage.libs import io, ble, bt, utils
+from mirage.libs.ble_utils.firewall import *
 
 class firewall(scenario.Scenario):
     #dict used to count occurences of a packet
@@ -10,28 +11,43 @@ class firewall(scenario.Scenario):
         self.a2sReceiver = self.module.a2sReceiver
         self.a2mEmitter = self.module.a2mEmitter
         self.a2mReceiver = self.module.a2mReceiver
+        self.firewallManager = FirewallEventManager()
+        io.info("MITM started !")
         return True
     {% for handler in properRules %}
-    def {{handler}} (self,packet):{% for rule in properRules[handler] %}
+    def {{handler}}(self,packet):
+        #Defines what apprend exactly
+        currentEvent = self.getEventName(packet.handle, packet.value, self.{{handler}}.__name__)
+        #Init counter of the number of packets if it's the first time that packet comes 
+        self.firewallManager.initCounters(currentEvent)
+        #Computes duration in second where last time where packet comes, 0 is default value
+        sinceLastEventDuration = self.firewallManager.durationSinceLastPacket(currentEvent){% for rule in properRules[handler] %}
+        #Computes duration in second where last time where packet comes, 0 is default value
         if packet.handle == {{rule.handle}} and {{rule.value}} in packet.value:
-            return {{rule.action}}{% endfor %}{% if properRules[handler] | length >0 %}
-        else :
+            #Increment counter of one packet and update timestamp of last packet that comes
+            self.firewallManager.countEvent(currentEvent){% if rule.number > 0 and not rule.action %}
+            #Check if flow of packets is allowed or not
+            if self.firewallManager.getCurrentCount(currentEvent) >= {{rule.number}} and sinceLastEventDuration < firewall.WINDOW_SIZE_IN_SECONDS:
+                return self.__drop(currentEvent)
+            elif sinceLastEventDuration > firewall.WINDOW_SIZE_IN_SECONDS: # After a timeElapsed counters go down
+                self.firewallManager.resetCounters(currentEvent)
+            else: # number of packet flows is inferior of limit during window
+                return True{% else %}
+            # packet is allowed
+            return True{% endif %}{% endfor %}
+        else : #default case of the rule
             return {{fileConfig.default}}
-    {% else %}
-        return {{fileConfig.default}}{% endif %}{% endfor %}
+{% endfor %}
+    
     def onEnd(self):
         io.info("MITM started")
         return True
 
-    #drop packets and reset counter of packets after drops
-    def __drop(self,name: str):
+    # Drop packets and reset counter of packets after drops
+    def __drop(self, name: str):
         io.info("According to our firewall policy we choose to drop the packet")
-        self.countEvent[name] = 0
+        self.firewallManager.resetCounters(name)
         return False
-    
-    #add packets to event counter
-    def __addEventCounter(self,name: str):
-        if(name not in self.countEvent):
-            self.countEvent[name] = 0
-        self.countEvent[name] += 1
 
+    def getEventName(self, handle: hex, value: hex, handlerName: str):
+        return "{0}_{1}_{2} ".format(str(handle),str(value),handlerName)
