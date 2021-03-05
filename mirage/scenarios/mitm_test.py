@@ -1,57 +1,47 @@
 from mirage.core import scenario, interpreter
 from mirage.libs import io, ble, bt, utils
-CONST_SEND_COMMAND_MASTER = "onMasterWriteBipCommand"
+from mirage.libs.ble_utils.firewall import *
 
 class mitm_test(scenario.Scenario):
-    #dict used to count occurences of a packet
-    countEvent = {}
+    # dict used to count occurences of a packet
 
     def onStart(self):
         self.a2sEmitter = self.module.a2sEmitter
         self.a2sReceiver = self.module.a2sReceiver
         self.a2mEmitter = self.module.a2mEmitter
         self.a2mReceiver = self.module.a2mReceiver
+        self.firewallManager = FirewallEventManager()
         io.info("MITM started !")
         return True
 
     def onMasterWriteCommand(self, packet):
       # If we send a notification from phone to device
-        if packet.handle == 0x29 and 0x2 in packet.value:
-            io.info("Try to block notification from mobile to device")
-            #We add 1 to counter for this type of message
-            self.__addEventCounter(CONST_SEND_COMMAND_MASTER)
-            #Blocking works but still have
-#           if self.countEvent[CONST_SEND_COMMAND_MASTER] > 1 :
-#            self.a2mEmitter.sendp(ble.BLEHandleValueNotification(handle=0x25, value=1))
-            # We drop packet
-            return False
-        # If we want to send a message to device to shut up
-        elif packet.handle == 0x29 and 0x0 in packet.value:
-            io.info("Send shutup command")
-            # If notification from phone to device has been sent, then we put the counter of notification to 0
-            if self.countEvent[CONST_SEND_COMMAND_MASTER] > 0 :
-              return self.__drop(CONST_SEND_COMMAND_MASTER)
-            # We authorize
-            return False
-        # We allow everything else
+        masterNotificationEvent = self.onMasterWriteCommand.__name__
+        currentEvent = self.getEventName(packet.handle, packet.value, masterNotificationEvent)
+        self.firewallManager.initCounters(currentEvent)
+        if packet.handle == 0x29 and 0x2 in packet.value or packet.handle == 0x29 and 0x0 in packet.value:
+            self.firewallManager.printEvent(currentEvent)
+            return True
         else:
             io.info("Unknown command send from master")
-            return True
+            return self.__drop(currentEvent)
 
     def onSlaveHandleValueNotification(self, packet):
-        #If device sends a notification to phone
+        slaveNotificationEvent = self.onSlaveHandleValueNotification.__name__
+        currentEvent = self.getEventName(packet.handle, packet.value, slaveNotificationEvent)
+        self.firewallManager.initCounters(currentEvent)
+        sinceLastEventDuration = self.firewallManager.durationSinceLastPacket(currentEvent)
         if packet.handle == 0x25 and 0x1 in packet.value:
-          #TODO : Put a thread safe way to increments and manage time window
-            #We add 1 to counter for this type of message
-            self.__addEventCounter(self.onSlaveHandleValueNotification.__name__)
-            #If we have 2 messages sent or more (-> message used to say to phone that he has to bell), we send an error
-            if self.countEvent[self.onSlaveHandleValueNotification.__name__] >= 2:
-                #Send Error To Slave (optionnal)
-                self.a2sEmitter.sendp(ble.BLEErrorResponse(handle=packet.handle))
-                #Drop Packet, master will receive nothing
-                return self.__drop(self.onSlaveHandleValueNotification.__name__)
+            # We add 1 to counter for this type of message
+            self.firewallManager.printEvent(currentEvent)
+            self.firewallManager.countEvent(currentEvent)
+            # If we have 2 messages sent or more (-> message used to say to phone that he has to bell), we block packets
+            if self.firewallManager.getCurrentCount(currentEvent) > 2 and sinceLastEventDuration < constants.WINDOW_SIZE_IN_SECONDS:
+                # Drop Packet, master will receive nothing, no need to send error message because we sned notification
+                return self.__drop(currentEvent)
+            elif sinceLastEventDuration > constants.WINDOW_SIZE_IN_SECONDS:
+                self.firewallManager.resetCounters(currentEvent)
             else:
-                #We allow a single packet to pass
                 return True
         else:
             return True
@@ -60,19 +50,18 @@ class mitm_test(scenario.Scenario):
         io.info("MITM started")
         return True
 
-    #drop packets and reset counter of packets after drops
-    def __drop(self,name: str):
+    # drop packets and reset counter of packets after drops
+    def __drop(self, name: str):
         io.info("According to our firewall policy we choose to drop the packet")
-        self.countEvent[name] = 0
+        self.firewallManager.resetCounters(name)
         return False
-    
-    #add packets to event counter
-    def __addEventCounter(self,name: str):
-        if(name not in self.countEvent):
-            self.countEvent[name] = 0
-        self.countEvent[name] += 1
+
+    def getEventName(self, handle: hex, value: hex, handlerName: str):
+        return "{0}_{1}_{2} ".format(str(handle),str(value),handlerName)
 
 
+
+'''
     """
         GATT : Central
     """
@@ -111,3 +100,4 @@ class mitm_test(scenario.Scenario):
     def runGATT(self):
         # Manage the correspondance between real GATT and this one
         ...
+'''
