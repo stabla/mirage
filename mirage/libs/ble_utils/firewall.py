@@ -1,6 +1,9 @@
-from mirage.libs.ble_utils.constants import COUNTER_FIELD, TIMESTAMP_FIELD
 from mirage.libs.ble_utils import constants
 import datetime
+
+COUNTER_FIELD='counter'
+TIMESTAMP_FIELD='timeStamp'
+WINDOW_SIZE_IN_SECONDS= 20
 
 class FirewallEventManager:
 
@@ -17,18 +20,18 @@ class FirewallEventManager:
             self.resetCounters(eventName)
 
     def countEvent(self, eventName: str):
-        self.eventCounter[eventName][constants.COUNTER_FIELD] += 1
-        self.eventCounter[eventName][constants.TIMESTAMP_FIELD] = datetime.datetime.now()
+        self.eventCounter[eventName][COUNTER_FIELD] += 1
+        self.eventCounter[eventName][TIMESTAMP_FIELD] = datetime.datetime.now()
 
     def durationSinceLastPacket(self, eventName: str):
         delta = datetime.datetime.now()-self.getLastPacketTimestamp(eventName)
         return delta.seconds
 
     def getCurrentCount(self, eventName: str):
-        return self.eventCounter[eventName][constants.COUNTER_FIELD]
+        return self.eventCounter[eventName][COUNTER_FIELD]
 
     def getLastPacketTimestamp(self, eventName: str):
-        return self.eventCounter[eventName][constants.TIMESTAMP_FIELD]
+        return self.eventCounter[eventName][TIMESTAMP_FIELD]
 
     def printEvent(self,eventName:str):
         print(eventName)
