@@ -7,6 +7,7 @@ class mitm_test(scenario.Scenario):
     # dict used to count occurences of a packet
 
     def onStart(self):
+        self.server = None
         self.a2sEmitter = self.module.a2sEmitter
         self.a2sReceiver = self.module.a2sReceiver
         self.a2mEmitter = self.module.a2mEmitter
@@ -138,7 +139,7 @@ class mitm_test(scenario.Scenario):
     def __fileExists(self,filename):
         return os.path.isfile(filename)
 
-    def __initGattServer(GATT_SLAVE_FILE, ATT_SLAVE_FILE):
+    def __initGattServer(self, GATT_SLAVE_FILE, ATT_SLAVE_FILE):
         ##if ATT_SLAVE_FILE != "" and self.__fileExists(ATT_SLAVE_FILE):
         #    self.importATT()
         if GATT_SLAVE_FILE != "" and self.__fileExists(GATT_SLAVE_FILE):
