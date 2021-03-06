@@ -139,13 +139,13 @@ class mitm_test(scenario.Scenario):
         return os.path.isfile(filename)
 
     def __initGattServer(GATT_SLAVE_FILE, ATT_SLAVE_FILE):
-        self.server = ble.GATT_Server()
-        if ATT_SLAVE_FILE != "" and self.__fileExists(ATT_SLAVE_FILE):
-            self.importATT()
-        elif GATT_SLAVE_FILE != "" and self.__fileExists(GATT_SLAVE_FILE):
+        ##if ATT_SLAVE_FILE != "" and self.__fileExists(ATT_SLAVE_FILE):
+        #    self.importATT()
+        if GATT_SLAVE_FILE != "" and self.__fileExists(GATT_SLAVE_FILE):
             self.importGATT()
         else:
             io.info("No filename provided : empty database !")
+        self.server = ble.GATT_Server()
 
     # Initialise server GATT and run it
     def __setGattServer(self, GATT_SLAVE_FILE, ATT_SLAVE_FILE):
