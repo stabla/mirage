@@ -18,24 +18,22 @@ class firewall(scenario.Scenario):
     def onMasterWriteCommand(self,packet):
         #Defines what apprend exactly
         currentEvent = self.getEventName(packet.handle, packet.value, self.onMasterWriteCommand.__name__)
-        #Init counter of the number of packets if it's the first time that packet comes 
+        #Init counter of the number of packets if it's the first time that packet is handled 
         self.firewallManager.initCounters(currentEvent)
-        #Computes duration in second where last time where packet comes, 0 is default value
+        #Computes duration in seconds where last time where packet comes, 0 is default value
         sinceLastEventDuration = self.firewallManager.durationSinceLastPacket(currentEvent)
-        #Computes duration in second where last time where packet comes, 0 is default value
         if packet.handle == 0x29 and 0x2 in packet.value:
             #Increment counter of one packet and update timestamp of last packet that comes
             self.firewallManager.countEvent(currentEvent)
             # packet is allowed
             return True
-        #Computes duration in second where last time where packet comes, 0 is default value
         if packet.handle == 0x29 and 0x0 in packet.value:
             #Increment counter of one packet and update timestamp of last packet that comes
             self.firewallManager.countEvent(currentEvent)
             #Check if flow of packets is allowed or not
-            if self.firewallManager.getCurrentCount(currentEvent) >= 1 and sinceLastEventDuration < firewall.WINDOW_SIZE_IN_SECONDS:
+            if self.firewallManager.getCurrentCount(currentEvent) >= 1 and sinceLastEventDuration < WINDOW_SIZE_IN_SECONDS:
                 return self.__drop(currentEvent)
-            elif sinceLastEventDuration > firewall.WINDOW_SIZE_IN_SECONDS: # After a timeElapsed counters go down
+            elif sinceLastEventDuration > WINDOW_SIZE_IN_SECONDS: # After a certain time counters go down
                 self.firewallManager.resetCounters(currentEvent)
             else: # number of packet flows is inferior of limit during window
                 return True
@@ -45,18 +43,17 @@ class firewall(scenario.Scenario):
     def onSlaveHandleValueNotification(self,packet):
         #Defines what apprend exactly
         currentEvent = self.getEventName(packet.handle, packet.value, self.onSlaveHandleValueNotification.__name__)
-        #Init counter of the number of packets if it's the first time that packet comes 
+        #Init counter of the number of packets if it's the first time that packet is handled 
         self.firewallManager.initCounters(currentEvent)
-        #Computes duration in second where last time where packet comes, 0 is default value
+        #Computes duration in seconds where last time where packet comes, 0 is default value
         sinceLastEventDuration = self.firewallManager.durationSinceLastPacket(currentEvent)
-        #Computes duration in second where last time where packet comes, 0 is default value
         if packet.handle == 0x25 and 0x1 in packet.value:
             #Increment counter of one packet and update timestamp of last packet that comes
             self.firewallManager.countEvent(currentEvent)
             #Check if flow of packets is allowed or not
-            if self.firewallManager.getCurrentCount(currentEvent) >= 2 and sinceLastEventDuration < firewall.WINDOW_SIZE_IN_SECONDS:
+            if self.firewallManager.getCurrentCount(currentEvent) >= 2 and sinceLastEventDuration < WINDOW_SIZE_IN_SECONDS:
                 return self.__drop(currentEvent)
-            elif sinceLastEventDuration > firewall.WINDOW_SIZE_IN_SECONDS: # After a timeElapsed counters go down
+            elif sinceLastEventDuration > WINDOW_SIZE_IN_SECONDS: # After a certain time counters go down
                 self.firewallManager.resetCounters(currentEvent)
             else: # number of packet flows is inferior of limit during window
                 return True

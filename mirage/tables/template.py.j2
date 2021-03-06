@@ -18,18 +18,17 @@ class firewall(scenario.Scenario):
     def {{handler}}(self,packet):
         #Defines what apprend exactly
         currentEvent = self.getEventName(packet.handle, packet.value, self.{{handler}}.__name__)
-        #Init counter of the number of packets if it's the first time that packet comes 
+        #Init counter of the number of packets if it's the first time that packet is handled 
         self.firewallManager.initCounters(currentEvent)
-        #Computes duration in second where last time where packet comes, 0 is default value
+        #Computes duration in seconds where last time where packet comes, 0 is default value
         sinceLastEventDuration = self.firewallManager.durationSinceLastPacket(currentEvent){% for rule in properRules[handler] %}
-        #Computes duration in second where last time where packet comes, 0 is default value
         if packet.handle == {{rule.handle}} and {{rule.value}} in packet.value:
             #Increment counter of one packet and update timestamp of last packet that comes
             self.firewallManager.countEvent(currentEvent){% if rule.number > 0 and not rule.action %}
             #Check if flow of packets is allowed or not
-            if self.firewallManager.getCurrentCount(currentEvent) >= {{rule.number}} and sinceLastEventDuration < firewall.WINDOW_SIZE_IN_SECONDS:
+            if self.firewallManager.getCurrentCount(currentEvent) >= {{rule.number}} and sinceLastEventDuration < WINDOW_SIZE_IN_SECONDS:
                 return self.__drop(currentEvent)
-            elif sinceLastEventDuration > firewall.WINDOW_SIZE_IN_SECONDS: # After a timeElapsed counters go down
+            elif sinceLastEventDuration > WINDOW_SIZE_IN_SECONDS: # After a certain time counters go down
                 self.firewallManager.resetCounters(currentEvent)
             else: # number of packet flows is inferior of limit during window
                 return True{% else %}

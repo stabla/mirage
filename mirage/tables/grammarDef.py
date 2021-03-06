@@ -32,9 +32,12 @@ class DefaultRule(str):
 class AllRules(List):
     grammar = BlockRule, DefaultRule
 
+class TargetAddress(List):
+    grammar = Target, blank, word,':',word,':',word,':',word,':',word,':',word
 
 class TargetRules(List):
-    grammar = Target, blank, word, endl, AllRules
+    grammar = TargetAddress, endl, AllRules
 
 class ConfigFile(List):
     grammar = attr("Header", Header), endl, TargetRules
+

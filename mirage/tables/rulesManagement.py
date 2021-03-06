@@ -49,9 +49,9 @@ def mapRule(correctInstruction: bleTableGrammar.ParameterAndValue) -> RuleClass:
 
 
 def getConfigFile(parsedAttributes: bleTableGrammar.ConfigFile) -> FileConfig:
-    target = parsedAttributes[0][1]
-    default = parsedAttributes[0][2][1]
-    attributesTocheck = parsedAttributes[0][2][0]
+    target = ':'.join(parsedAttributes[0][0][1:])
+    default = parsedAttributes[0][1][1]
+    attributesTocheck = parsedAttributes[0][1][0]
     rules = list(map(mapRule, attributesTocheck))
     return FileConfig(target, default, rules)
 
