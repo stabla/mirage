@@ -1,5 +1,5 @@
 import jinja2
-import mirage.tables.rulesManagement as rm
+import rulesManagement as rm
 
 with open('/Users/ahmed/mirage/mirage/tables/template.py.j2') as templateFile:
     template = jinja2.Template(templateFile.read())
