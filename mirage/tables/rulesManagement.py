@@ -2,6 +2,7 @@ import grammarDef as bleTableGrammar
 from typing import List
 import csv
 
+
 class RuleClass:
 
     def __init__(self, number: int = 1, action: str = '', typeCommand: str = '', handle: hex = 0x0, value: hex = 0x0):
@@ -65,7 +66,10 @@ def groupByRuleType(rulesList: List[RuleClass]):
     mapHandlersToCommand(dictionnary)
     return dictionnary
 
-def mapHandlersToCommand(rulesGroupedByTypes : dict) -> dict:
-    reader = csv.DictReader(open("/Users/ahmed/mirage/mirage/tables/commandsToHandlers.csv",'r'))
+
+def mapHandlersToCommand(rulesGroupedByTypes: dict) -> dict:
+    reader = csv.DictReader(
+        open("/Users/ahmed/mirage/mirage/tables/commandsToHandlers.csv", 'r'))
     for line in reader:
-        rulesGroupedByTypes[line['handler']] = rulesGroupedByTypes.pop(line['command'])
+        rulesGroupedByTypes[line['handler']
+                            ] = rulesGroupedByTypes.pop(line['command'])

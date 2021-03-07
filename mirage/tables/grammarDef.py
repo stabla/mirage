@@ -41,3 +41,16 @@ class TargetRules(List):
 class ConfigFile(List):
     grammar = attr("Header", Header), endl, TargetRules
 
+# Grammar definition for GATTFilter
+
+class GATTHeader:
+    grammar = K('GATT_FILTER')
+
+class GATTFilterParameter(Keyword):
+    grammar = Enum(K('entity'), K('type'), K('action'), K('serviceType'), K('uuid'), K('beginHandle'), K('endHandle'), K('declarationHandle'), K('valueHandle'), K('value'), K('permissions'),K('handle'))
+
+class ValueOfGATTFilter(List):
+    grammar = name(), word
+
+class GATTKeyValue(Namespace):
+    grammar = csl(ValueOfGATTFilter)
