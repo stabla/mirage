@@ -1,0 +1,4 @@
+[GATT_MODIFIER]
+ATT replace handle before after value before after type before after
+ATT replace handle before after
+[GATT_MODIFIER]

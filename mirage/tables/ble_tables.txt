@@ -4,3 +4,14 @@ action allow number 1 type BLEWriteCommand handle 0x29 value 0x2
 action deny number 1 type BLEWriteCommand handle 0x29 value 0x0 
 action deny number 2 type BLEHandleValueNotification handle 0x25 value 0x1
 default allow
+END BLE_TABLES
+GATT_FILTER
+entity GATT type Service action remove serviceType do uuid do beginHandle do
+entity GATT type Characteristic action remove uuid do valueHandle do value do
+entity GATT type Descriptor action remove handle do uuid do value do
+entity ATT type Attrib action remove handle do type do value do
+END GATT_FILTER
+GATT_MODIFIER
+ATT replace handle before after value before after type before after
+ATT replace handle before after
+END GATT_MODIFIER

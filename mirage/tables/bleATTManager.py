@@ -145,11 +145,5 @@ class Firewall_GattServer:
 
 
 firewall = Firewall_GattServer()
-firewall.importGATT('/Users/ahmed/mirage/ATT_SLAVE_MITM')
-
-# for service in firewall.allowedGATTServices:
-#       print(service)
-
+firewall.importGATT('/Users/ahmed/mirage/GATT_SLAVE_MITM')
 firewall.importATT("/Users/ahmed/mirage/ATT_SLAVE_MITM")
-# for attribute in attributes:
-#     print(attribute)
