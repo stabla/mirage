@@ -2,21 +2,21 @@
 import configparser
 from helpUtils import UUID, isHexadecimal, isPrintable
 
-
 class Attribute:
     def __init__(self, ATThandle, ATTtype, ATTvalue):
         self.ATThandle = ATThandle
         self.ATTvalue = ATTvalue
-        if isinstance(ATTtype, int):
-            self.ATTtype = UUID(UUID16=ATTtype)
-        elif isinstance(ATTtype, bytes):
-            self.ATTtype = UUID(data=ATTtype)
-        elif isHexadecimal(ATTtype) and len(ATTtype) <= 6:
-            self.ATTtype = UUID(UUID16=int(ATTtype, 16))
-        elif isHexadecimal(ATTtype) and len(ATTtype) > 6:
-            self.ATTtype = UUID(UUID128=bytes.fromhex(ATTtype))
-        else:
-            self.ATTtype = UUID(name=ATTtype)
+        self.ATTtype = ATTtype
+        # if isinstance(ATTtype, int):
+        #     self.ATTtype = UUID(UUID16=ATTtype)
+        # elif isinstance(ATTtype, bytes):
+        #     self.ATTtype = UUID(data=ATTtype)
+        # elif isHexadecimal(ATTtype) and len(ATTtype) <= 6:
+        #     self.ATTtype = UUID(UUID16=int(ATTtype, 16))
+        # elif isHexadecimal(ATTtype) and len(ATTtype) > 6:
+        #     self.ATTtype = UUID(UUID128=bytes.fromhex(ATTtype))
+        # else:
+        #     self.ATTtype = None #UUID(name=ATTtype) 
 
     def __str__(self):
         return '''
@@ -134,16 +134,16 @@ class Firewall_GattServer:
 
     def gattFilter(self, gattInformation):
         if isinstance(gattInformation, Service):
-            return gattInformation in firewall.allowedGATTServices
+            return gattInformation in self.allowedGATTServices
         elif isinstance(gattInformation, Characteristic):
-            return gattInformation in firewall.allowedGATTCharacteristics
+            return gattInformation in self.allowedGATTCharacteristics
         elif isinstance(gattInformation, Descriptor):
-            return gattInformation in firewall.allowedGATTDescriptors
+            return gattInformation in self.allowedGATTDescriptors
 
     def attFilter(self, attribute: Attribute):
-        return attribute in firewall.allowedATT_Attributes
+        return attribute in self.allowedATT_Attributes
 
 
-firewall = Firewall_GattServer()
-firewall.importGATT('/Users/ahmed/mirage/GATT_SLAVE_MITM')
-firewall.importATT("/Users/ahmed/mirage/ATT_SLAVE_MITM")
+# firewall = Firewall_GattServer()
+# firewall.importGATT('/Users/ahmed/mirage/GATT_SLAVE_MITM')
+# firewall.importATT("/Users/ahmed/mirage/ATT_SLAVE_MITM")

@@ -2,11 +2,14 @@ import grammarDef as bleTableGrammar
 from typing import List
 import csv
 import re
+from bleATTManager import Attribute
 
 
 class AbstractRule:
-    def __init__(self,action: str = ''):
+    def __init__(self, action: str = ''):
         self.action = action
+
+
 class BLETableRule(AbstractRule):
 
     def __init__(self, number: int = 1, action: str = '', typeCommand: str = '', handle: hex = 0x0, value: hex = 0x0):
@@ -14,7 +17,7 @@ class BLETableRule(AbstractRule):
         self.typeCommand = typeCommand
         self.handle = handle
         self.value = value
-        super()
+        self.action = action
 
     def __str__(self):
         # return "Number of paquets to block  -> " + str(self.number) + " \nAction to do -> " + self.action + "\nCommandBleToFilter ->" + self.typeCommand + "\nHandle To Manage ->" + self.handle + "\nHandle To Value ->" + self.value
@@ -80,15 +83,31 @@ def mapRule(correctInstruction: bleTableGrammar.ParameterAndValue) -> BLETableRu
         for key, value in element.items():
             InstructionItems[str(key)] = value[0]
     return BLETableRule(number=int(InstructionItems['number']), action=InstructionItems['action'], typeCommand=InstructionItems['type'],
-                     handle=InstructionItems['handle'], value=InstructionItems['value'])
+                        handle=InstructionItems['handle'], value=InstructionItems['value'])
 
 
 def getConfigFile(parsedAttributes: bleTableGrammar.ConfigFile):
-    target = ':'.join(parsedAttributes[0][0][1:])
-    default = parsedAttributes[0][1][1]
-    attributesTocheck = parsedAttributes[0][1][0]
+    target = ':'.join(parsedAttributes[0][1:])
+    default = parsedAttributes[1][1]
+    attributesTocheck = parsedAttributes[1][0]
     rules = list(map(mapRule, attributesTocheck))
     return FileConfig(target, default, rules)
+
+
+def mapGattModifier(rule: bleTableGrammar.ParameterAndValue):
+    before = after = Attribute('', None, None)
+    for case in rule:
+        if case.name == 'handle':
+            before.ATThandle,after.ATThandle = case[0],case[1]
+        if case.name == 'value':
+            before.ATTvalue,after.ATThandle = case[0],case[1]
+        if case.name == 'type':
+            before.ATTtype,after.ATTtype = case[0],case[1]
+    return before,after
+
+
+def getGattModifier(parsedAttributes):
+    return list(map(mapGattModifier, parsedAttributes))
 
 
 def groupByRuleType(rulesList: List[BLETableRule]):

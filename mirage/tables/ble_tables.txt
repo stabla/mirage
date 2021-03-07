@@ -12,6 +12,6 @@ entity GATT type Descriptor action remove handle do uuid do value do
 entity ATT type Attrib action remove handle do type do value do
 END GATT_FILTER
 GATT_MODIFIER
-ATT replace handle before after value before after type before after
-ATT replace handle before after
+ATT replace handle 01 02 value 03 04 type 05 06
+ATT replace handle 07 08
 END GATT_MODIFIER

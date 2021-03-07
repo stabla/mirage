@@ -30,13 +30,8 @@ class firewall(scenario.Scenario):
         if packet.handle == 0x29 and 0x0 in packet.value:
             #Increment counter of one packet and update timestamp of last packet that comes
             self.firewallManager.countEvent(currentEvent)
-            #Check if flow of packets is allowed or not
-            if self.firewallManager.getCurrentCount(currentEvent) >= 1 and sinceLastEventDuration < WINDOW_SIZE_IN_SECONDS:
-                return self.__drop(currentEvent)
-            elif sinceLastEventDuration > WINDOW_SIZE_IN_SECONDS: # After a certain time counters go down
-                self.firewallManager.resetCounters(currentEvent)
-            else: # number of packet flows is inferior of limit during window
-                return True
+            # packet is allowed
+            return True
         else : #default case of the rule
             return True
 
@@ -50,13 +45,8 @@ class firewall(scenario.Scenario):
         if packet.handle == 0x25 and 0x1 in packet.value:
             #Increment counter of one packet and update timestamp of last packet that comes
             self.firewallManager.countEvent(currentEvent)
-            #Check if flow of packets is allowed or not
-            if self.firewallManager.getCurrentCount(currentEvent) >= 2 and sinceLastEventDuration < WINDOW_SIZE_IN_SECONDS:
-                return self.__drop(currentEvent)
-            elif sinceLastEventDuration > WINDOW_SIZE_IN_SECONDS: # After a certain time counters go down
-                self.firewallManager.resetCounters(currentEvent)
-            else: # number of packet flows is inferior of limit during window
-                return True
+            # packet is allowed
+            return True
         else : #default case of the rule
             return True
 
