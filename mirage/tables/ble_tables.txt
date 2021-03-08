@@ -1,17 +1,17 @@
 BLE_TABLES
 TARGET FC:58:FA:04:04:13
 action allow number 1 type BLEWriteCommand handle 0x29 value 0x2
-action deny number 1 type BLEWriteCommand handle 0x29 value 0x0 
-action deny number 2 type BLEHandleValueNotification handle 0x25 value 0x1
-default allow
+action allow number 1 type BLEWriteCommand handle 0x29 value 0x0 
+action allow number 2 type BLEHandleValueNotification handle 0x25 value 0x1
+default deny
 END BLE_TABLES
 GATT_FILTER
-entity GATT type Service action remove serviceType do uuid do beginHandle do
-entity GATT type Characteristic action remove uuid do valueHandle do value do
-entity GATT type Descriptor action remove handle do uuid do value do
-entity ATT type Attrib action remove handle do type do value do
+entity GATT type Service serviceType primary uuid 1801 endHandle 0x0006
+entity GATT type Characteristic uuid 2a00 valueHandle 0x0003 value 0x0006
+entity GATT type Descriptor handle 0x0026 uuid 2902 value 0000
+entity ATT type Attribute handle 0x000b type 2a24 value 424b2d424c452d312e30
 END GATT_FILTER
 GATT_MODIFIER
-ATT replace handle 01 02 value 03 04 type 05 06
+ATT replace handle 0x000b 0x000b type 2a24 2a24 value 424b2d424c452d312e30 424b2d424c452d312e30 
 ATT replace handle 07 08
 END GATT_MODIFIER

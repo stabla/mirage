@@ -68,8 +68,7 @@ class ruleStart(List):
     blank_word = blank, word, blank
     entity = Entity, blank_word
     entityType = EntityType, blank_word
-    actionType = ActionType, blank_word
-    grammar = entity, entityType, actionType
+    grammar = entity, entityType
 
 class GATTRule(List):
     grammar = ruleStart,optional(ParameterAndValue), optional(ParameterAndValue),optional(ParameterAndValue), endl

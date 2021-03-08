@@ -3,20 +3,11 @@ import configparser
 from helpUtils import UUID, isHexadecimal, isPrintable
 
 class Attribute:
-    def __init__(self, ATThandle, ATTtype, ATTvalue):
+
+    def __init__(self, ATThandle=None, ATTtype=None, ATTvalue=None):
         self.ATThandle = ATThandle
         self.ATTvalue = ATTvalue
         self.ATTtype = ATTtype
-        # if isinstance(ATTtype, int):
-        #     self.ATTtype = UUID(UUID16=ATTtype)
-        # elif isinstance(ATTtype, bytes):
-        #     self.ATTtype = UUID(data=ATTtype)
-        # elif isHexadecimal(ATTtype) and len(ATTtype) <= 6:
-        #     self.ATTtype = UUID(UUID16=int(ATTtype, 16))
-        # elif isHexadecimal(ATTtype) and len(ATTtype) > 6:
-        #     self.ATTtype = UUID(UUID128=bytes.fromhex(ATTtype))
-        # else:
-        #     self.ATTtype = None #UUID(name=ATTtype) 
 
     def __str__(self):
         return '''
@@ -25,12 +16,11 @@ class Attribute:
         ATTvalue -> {2}
         '''.format(self.ATThandle, self.ATTtype, self.ATTvalue)
 
-
-class Service:
-    def __init__(self, beginHandle: int, endHandle: int, uuidValue: int, serviceType: str):
+class Service():
+    def __init__(self, beginHandle: int = -1, endHandle: int= -1, uuidValue: int= -1, serviceType: str= None):
         self.beginHandle = beginHandle
         self.endHandle = endHandle
-        self.uuidValue: UUID = UUID(data=uuidValue)
+        self.uuidValue:UUID = UUID(data=uuidValue)
         self.serviceType = serviceType
 
     def __str__(self):
@@ -39,15 +29,15 @@ class Service:
         End Handle -> {1}
         UUID Value -> {2}
         ServiceType -> {3}
-        '''.format(hex(self.beginHandle), hex(self.endHandle), self.uuidValue, self.serviceType)
+        '''.format(self.beginHandle, self.endHandle, self.uuidValue, self.serviceType)
 
 
-class Characteristic:
-    def __init__(self, declarationHandle: int, uuid: int, valueHandle: int, value: hex, permissions: list):
+class Characteristic():
+    def __init__(self, declarationHandle: int = -1, uuid: int = -1, valueHandle: int= -1, value: hex= -1, permissions: list= None):
         self.declarationHandle = declarationHandle
         self.uuid = UUID(data=uuid)
         self.valueHandle = valueHandle
-        self.value: value
+        self.value= value
         self.permissions = permissions
 
     def __str__(self):
@@ -57,10 +47,10 @@ class Characteristic:
         Value Handle -> {2}
         Value -> {3}
         Permissions -> {4}
-        '''.format(hex(self.declarationHandle), self.uuid, self.valueHandle, self.value, self.permissions)
+        '''.format(self.declarationHandle, self.uuid, self.valueHandle, self.value, self.permissions)
 
 
-class Descriptor:
+class Descriptor():
     def __init__(self, handle: int, uuid: int, value: hex):
         self.handle = handle
         self.uuid = UUID(data=uuid)

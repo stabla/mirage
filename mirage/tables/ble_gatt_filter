@@ -1,6 +1,0 @@
-[GATT_FILTER]
-entity GATT type Service action remove serviceType do uuid do beginHandle do endHandle do
-entity GATT type Characteristic action remove declarationHandle do uuid do valueHandle do value do permissions do
-entity GATT type Descriptor action remove handle do uuid do value do
-entity ATT type Attrib action remove handle do type do value do
-[GATT_FILTER]
