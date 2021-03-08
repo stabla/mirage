@@ -11,8 +11,8 @@ if(rm.GATT_FILTER_SECTION in f):
     gatt_filter_rules = rm.getGattFilterRules(f[rm.GATT_FILTER_SECTION])
 
 print(ble_tables_rule)
-print(gatt_modifier_rule)
-for element in gatt_filter_rules:
-    print(element)
+# print(gatt_modifier_rule)
+# for element in gatt_filter_rules:
+#     print(element)
 
 sc.generateScenario(ble_tables_rule)

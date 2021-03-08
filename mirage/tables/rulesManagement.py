@@ -9,7 +9,7 @@ class BLETableRule():
         self.typeCommand = typeCommand
         self.handle = handle
         self.value = value
-        self.action = action
+        self.action = True if action == 'allow' else False
 
     def __str__(self):
         return '''

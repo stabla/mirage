@@ -18,29 +18,47 @@ class firewall(scenario.Scenario):
     def onEnd(self):
         io.info("MITM finished")
         return True
-    {% for handler in properRules %}
-    def {{handler}}(self,packet):
+    
+    def onMasterWriteCommand(self,packet):
         #Defines what apprend exactly
-        currentEvent = self.getEventName(packet.handle, packet.value, self.{{handler}}.__name__)
+        currentEvent = self.getEventName(packet.handle, packet.value, self.onMasterWriteCommand.__name__)
         #Init counter of the number of packets if it's the first time that packet is handled 
         self.firewallManager.initCounters(currentEvent)
         #Computes duration in seconds where last time where packet comes, 0 is default value
-        sinceLastEventDuration = self.firewallManager.durationSinceLastPacket(currentEvent){% for rule in properRules[handler] %}
-        if packet.handle == {{rule.handle}} and {{rule.value}} in packet.value:
+        sinceLastEventDuration = self.firewallManager.durationSinceLastPacket(currentEvent)
+        if packet.handle == 0x29 and 0x2 in packet.value:
             #Increment counter of one packet and update timestamp of last packet that comes
-            self.firewallManager.countEvent(currentEvent){% if rule.number > 0 and rule.action == False  %}
+            self.firewallManager.countEvent(currentEvent)
+            # packet is allowed
+            return True
+        if packet.handle == 0x29 and 0x0 in packet.value:
+            #Increment counter of one packet and update timestamp of last packet that comes
+            self.firewallManager.countEvent(currentEvent)
+            # packet is allowed
+            return True
+        else : #default case of the rule
+            return self.__drop(currentEvent)
+
+    def onSlaveHandleValueNotification(self,packet):
+        #Defines what apprend exactly
+        currentEvent = self.getEventName(packet.handle, packet.value, self.onSlaveHandleValueNotification.__name__)
+        #Init counter of the number of packets if it's the first time that packet is handled 
+        self.firewallManager.initCounters(currentEvent)
+        #Computes duration in seconds where last time where packet comes, 0 is default value
+        sinceLastEventDuration = self.firewallManager.durationSinceLastPacket(currentEvent)
+        if packet.handle == 0x25 and 0x1 in packet.value:
+            #Increment counter of one packet and update timestamp of last packet that comes
+            self.firewallManager.countEvent(currentEvent)
             #Check if flow of packets is allowed or not
-            if self.firewallManager.getCurrentCount(currentEvent) >= {{rule.number}} and sinceLastEventDuration < WINDOW_SIZE_IN_SECONDS:
+            if self.firewallManager.getCurrentCount(currentEvent) >= 2 and sinceLastEventDuration < WINDOW_SIZE_IN_SECONDS:
                 return self.__drop(currentEvent)
             elif sinceLastEventDuration > WINDOW_SIZE_IN_SECONDS: # After a certain time counters go down
                 self.firewallManager.resetCounters(currentEvent)
             else: # number of packet flows is inferior of limit during window
-                return True{% else %}
-            # packet is allowed
-            return True{% endif %}{% endfor %}
+                return True
         else : #default case of the rule
-            return {{'self.__drop(currentEvent)' if not BleTable.default else True}}
-{% endfor %}
+            return self.__drop(currentEvent)
+
     # Drop packets and reset counter of packets after drops
     def __drop(self, name: str):
         io.info("According to our firewall policy we choose to drop the packet")
