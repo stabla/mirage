@@ -3,7 +3,7 @@ from mirage.libs import io, ble, bt, utils
 from mirage.libs.ble_utils.firewall import *
 import configparser,os.path,subprocess
 
-class firewall(scenario.Scenario):
+class mitm_test(scenario.Scenario):
 
     def onStart(self):
         self.a2sEmitter = self.module.a2sEmitter
@@ -18,6 +18,7 @@ class firewall(scenario.Scenario):
     def onEnd(self):
         io.info("MITM finished")
         return True
+
     {% for handler in properRules %}
     def {{handler}}(self,packet):
         #Defines what apprend exactly
@@ -50,8 +51,9 @@ class firewall(scenario.Scenario):
     def getEventName(self, handle: hex, value: hex, handlerName: str):
         return "{0}_{1}_{2} ".format(str(handle),str(value),handlerName)
 
-    #GATT CENTRAL
-    
+    """
+    GATT CENTRAL
+    """
     def onMasterReadByGroupTypeRequest(self, packet):
         io.info("Read By Group Type Request (from Master): startHandle = "+hex(packet.startHandle)+
                 " / endHandle = "+hex(packet.endHandle)+" / uuid = "+hex(packet.uuid))
@@ -80,6 +82,22 @@ class firewall(scenario.Scenario):
                 self.a2mEmitter.sendp(ble.BLEErrorResponse(request=0x08,ecode=response, handle=packet.startHandle))
         return False
 
+    def onMasterFindInformationRequest(self,packet):
+        io.info("Find Information Request : startHandle = "+hex(packet.startHandle)+
+            " / endHandle = "+hex(packet.endHandle))
+        io.info("Response from MITM FindInfo ...")
+        (success,response) = self.server.findInformation(packet.startHandle,packet.endHandle)
+        if success:
+            io.displayPacket(ble.BLEFindInformationResponse(attributes=response))
+            self.a2mEmitter.sendp(ble.BLEFindInformationResponse(attributes=response))
+        else:
+            self.a2mEmitter.sendp(ble.BLEErrorResponse(request=0x04,ecode=response,handle=packet.startHandle))
+        return False
+
+    # Check if . is authorized/banned in firewall rules
+    def __firewallParser(self, rule):
+        pass
+
     # Import ATT Config file
     def __importATT(self, filename="ATT_SLAVE_MITM"):
         io.info("Importing ATT layer datas from "+filename+" ...")
@@ -95,6 +113,7 @@ class firewall(scenario.Scenario):
             self.server.addAttribute(handle=attHandle,value=attValue,type=attType,permissions=["Read","Write"])
         return False
 
+    # Import GATT Config file 
     def __importGATT(self, filename="GATT_SLAVE_MITM"):
         io.info("Importing GATT layer datas from "+filename+" ...")        
         config = configparser.ConfigParser()
@@ -102,6 +121,7 @@ class firewall(scenario.Scenario):
         for element in config.sections():
             infos=config[element]
             if "type" in infos:
+                print(infos.get('type'))
                 if infos.get("type") == "service":
                     io.info("Services ! !")
                     startHandle = int(element,16)
@@ -124,19 +144,11 @@ class firewall(scenario.Scenario):
                     value = bytes.fromhex(infos.get("value"))
                     self.server.addDescriptor(uuid,value,handle)
         return False
+        
 
-    def onMasterFindInformationRequest(self,packet):
-        io.info("Find Information Request : startHandle = "+hex(packet.startHandle)+
-            " / endHandle = "+hex(packet.endHandle))
-        io.info("Response from MITM FindInfo ...")
-        (success,response) = self.server.findInformation(packet.startHandle,packet.endHandle)
-        if success:
-            io.displayPacket(ble.BLEFindInformationResponse(attributes=response))
-            self.a2mEmitter.sendp(ble.BLEFindInformationResponse(attributes=response))
-        else:
-            self.a2mEmitter.sendp(ble.BLEErrorResponse(request=0x04,ecode=response,handle=packet.startHandle))
-        return False
-    
+    def __fileExists(self,filename):
+        return os.path.isfile(filename)
+
     # Initialise server GATT and run it
     def __setGattServer(self, GATT_SLAVE_FILE, ATT_SLAVE_FILE):
         # init server
@@ -150,11 +162,8 @@ class firewall(scenario.Scenario):
             self.__importGATT(GATT_SLAVE_FILE)
         else:
             io.info("MITM: No filename provided : empty database !")
-        # print("Show ATT")
-        # self.server.database.show()
-        # print("STRUCTURE SERVEUR GATT")
-        # print(self.server.database.showGATT())
 
+    # Export heart of the function here 
     def __getGattSlave(self, GATT_SLAVE_FILE, ATT_SLAVE_FILE):
         # Load module
         m = utils.loadModule('ble_discover')
@@ -166,13 +175,13 @@ class firewall(scenario.Scenario):
         m["FILTER_BY"] = ""
         m["FILTER"] = ""
         m['GATT_FILE']=GATT_SLAVE_FILE
-        #open(m['GATT_FILE'], 'w').close()
+        open(m['GATT_FILE'], 'w').close()
         # Execute to fill GATT_FILE
         m.execute()
 
         m["WHAT"] = "attributes"
         m['ATT_FILE']=ATT_SLAVE_FILE
-        #open(m['ATT_FILE'], 'w').close()
+        open(m['ATT_FILE'], 'w').close()
         # Execute to fill ATT_FILE
         m.execute()
 
@@ -181,15 +190,21 @@ class firewall(scenario.Scenario):
         while (self.a2sEmitter.getMode() != "NORMAL"):
             utils.wait(seconds=1)
             print(self.a2sEmitter.getMode())
+            
         address = utils.addressArg(self.args["TARGET"])
         connectionType = self.args["CONNECTION_TYPE"]
         self.responderAddress = address
         self.responderAddressType = (b"\x00" if self.args["CONNECTION_TYPE"] == "public" else b"\x01")
+
         io.info("MITM: Connecting to slave "+address+"...")
         self.a2sEmitter.sendp(ble.BLEConnect(dstAddr=address, type=connectionType, initiatorType=initiatorType))
+
         while not self.a2sEmitter.isConnected(): utils.wait(seconds=0.5)
+
+        # If conneced correctly, then clone the GATT Server
         if self.a2sEmitter.isConnected():
             io.success("Connected on slave : "+self.a2sReceiver.getCurrentConnection())
+            
             io.info("MITM: Cloning GATT Server / ATT Attributes ... ")
             self.__getGattSlave("GATT_SLAVE_MITM", "ATT_SLAVE_MITM")
             io.success("MITM: Cloning has been finished ... ")
@@ -198,4 +213,5 @@ class firewall(scenario.Scenario):
             io.success("MITM: GATT/ATT server running ... ")
         else:
             io.fail("MITM: No active connections !") 
+
         return False

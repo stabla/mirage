@@ -27,6 +27,6 @@ def groupByRuleType(rulesList: list):
 
 
 def mapHandlersToCommand(rulesGroupedByTypes: dict):
-    reader= csv.DictReader(open("/Users/ahmed/mirage/mirage/tables/commandsToHandlers.csv", 'r'))
+    reader= csv.DictReader(open("commandsToHandlers.csv", 'r'))
     for line in reader:
         rulesGroupedByTypes[line['handler']]= rulesGroupedByTypes.pop(line['command'])

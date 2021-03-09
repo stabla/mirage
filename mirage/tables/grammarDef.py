@@ -1,16 +1,13 @@
 from pypeg2 import Enum, K, Keyword, List, Symbol, Namespace, csl, name, word, optional, endl, some, attr, blank, parse, maybe_some
 
+# Grammar definition used  in common
+
 class Header:
     grammar = K('BLE_TABLES')
 class Target:
     grammar = K("TARGET")
 class defautType:
     grammar = K("default")
-class GATTFilterHeader:
-    grammar = K('GATT_FILTER')
-
-class GATTModifierHeader:
-    grammar = K('GATT_MODIFIER')
 
 class Entity:
     grammar = 'entity'
@@ -21,35 +18,30 @@ class EntityType:
 class ActionType:
     grammar = 'action'
 
-class Parameter(Keyword):
-    grammar = Enum(K("action"), K("type"), K(
-        "handle"), K("number"), K("value"))
-
-
 class ValueOfParameter(List):
     grammar = name(), blank, word, blank
-
 
 class ParameterAndValue(Namespace):
     grammar = csl(ValueOfParameter)
 
+# Grammar definition for BleTable
 
-class Rule(List):
+class BleTableRule(List):
     mandatory = ParameterAndValue, ParameterAndValue, ParameterAndValue
     grammar = mandatory, optional(ParameterAndValue), optional(ParameterAndValue), endl
 
 
-class BlockRule(List):
-    grammar = some(Rule)
+class BleTableBlockRule(List):
+    grammar = some(BleTableRule)
 
 
-class DefaultRule(str):
+class BleTableDefaultRule(str):
     grammar = attr("defautType", defautType), blank, word, optional(
         blank), endl
 
 
-class AllRules(List):
-    grammar = BlockRule, DefaultRule
+class BleTableAllRules(List):
+    grammar = BleTableBlockRule, BleTableDefaultRule
 
 
 class TargetAddress(List):
@@ -57,37 +49,34 @@ class TargetAddress(List):
 
 
 class TargetRules(List):
-    grammar = TargetAddress, endl, AllRules
+    grammar = TargetAddress, endl, BleTableAllRules
 
 
-class ConfigFile(List):
+class BleTableSection(List):
     grammar = attr("Header", Header), endl, TargetRules, endl, 'END ', attr("Header", Header)
 
 # Grammar definition for GATTFilter
+
 class ruleStart(List):
     blank_word = blank, word, blank
     entity = Entity, blank_word
     entityType = EntityType, blank_word
     grammar = entity, entityType
 
-class GATTRule(List):
+class GATTFilterRule(List):
     grammar = ruleStart,optional(ParameterAndValue), optional(ParameterAndValue),optional(ParameterAndValue), endl
 
-class GATTFilterRulesBlock(List):
-    grammar = some(GATTRule)
+class GattFilterSection(List):
+    grammar = some(GATTFilterRule)
 
-class BAV(List):
+# Grammar definition for GATTModifier
+
+class ReplaceStatement(List):
     grammar = name(), blank, word, blank, word
 
 class GATTModifyRule(List):
-    attR = 'ATT replace', blank
-    grammar = attR, BAV, optional(endl), optional(BAV), optional(endl), optional(BAV), optional(endl)
+    start = 'ATT replace', blank
+    grammar = start, ReplaceStatement, optional(endl), optional(ReplaceStatement), optional(endl), optional(ReplaceStatement), optional(endl)
 
-class GATTModifierRulesBlock(List):
+class gattModifierSection(List):
     grammar = some(GATTModifyRule)
-
-class GATTPartOfFile(List):
-    grammar = attr("GATTFilterHeader",GATTFilterHeader), endl, GATTFilterRulesBlock, 'END ', attr("GATTFilterHeader", GATTFilterHeader)
-
-class GATTModifierPart(List):
-    grammar = attr("GATT_MODIFIER",GATTModifierHeader), endl, GATTModifierRulesBlock,endl, 'END ', attr("GATT_MODIFIER", GATTModifierHeader)

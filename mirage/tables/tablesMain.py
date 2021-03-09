@@ -1,18 +1,26 @@
 import rulesManagement as rm
 import scenarioGen as sc
+from bleATTManager import Firewall_GattServer
 
-f = rm.parseFile('/Users/ahmed/mirage/mirage/tables/ble_tables.txt')
+#Parse file
+parsedFile = rm.parseFile('/Users/ahmed/mirage/mirage/tables/ble_tables.txt')
+#Extract BLE_TABLE RULES
+if(rm.BLE_TABLES_SECTION in parsedFile):
+    ble_tables_rule = rm.getBleTable(parsedFile[rm.BLE_TABLES_SECTION])
+#Extract ATT SUBSTITUTION RULES
+if(rm.GATT_FILTER_SECTION in parsedFile):
+    gatt_filter_rules = rm.getGattFilterRules(parsedFile[rm.GATT_FILTER_SECTION])
+#Extract ATT SUBSTITUTION RULES
+if(rm.GATT_MODIFIER_SECTION in parsedFile):
+    gatt_modifier_rule = rm.getGattModifierRules(parsedFile[rm.GATT_MODIFIER_SECTION])
 
-if(rm.BLE_TABLES_SECTION in f):
-    ble_tables_rule = rm.getBleTable(f[rm.BLE_TABLES_SECTION])
-if(rm.GATT_MODIFIER_SECTION in f):
-    gatt_modifier_rule = rm.getGattModifierRules(f[rm.GATT_MODIFIER_SECTION])
-if(rm.GATT_FILTER_SECTION in f):
-    gatt_filter_rules = rm.getGattFilterRules(f[rm.GATT_FILTER_SECTION])
-
-print(ble_tables_rule)
-# print(gatt_modifier_rule)
-# for element in gatt_filter_rules:
-#     print(element)
-
+#Filter Rules By Type
+characteristicRules = rm.getCharacteristicRules(gatt_filter_rules)
+serviceRules = rm.getServiceRules(gatt_filter_rules)
+descriptorRules = rm.getDescriptorRules(gatt_filter_rules)
+attributeRules = rm.getAttributeRules(gatt_filter_rules)
 sc.generateScenario(ble_tables_rule)
+
+# Filtering Effectively ATT/GATT Objects
+firewall = Firewall_GattServer()
+firewall.doFiltering(characteristicRules,serviceRules,descriptorRules,attributeRules,gatt_modifier_rule)
