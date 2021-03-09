@@ -1,14 +1,17 @@
 import datetime
 import configparser
+import mirage.tables.rulesManagement as rm
+from mirage.tables.bleATTManager import Attribute, Descriptor, Characteristic, Descriptor,Service
 
 COUNTER_FIELD = 'counter'
 TIMESTAMP_FIELD = 'timeStamp'
 WINDOW_SIZE_IN_SECONDS = 20
 
-class ATT_Attribute:
-	def __init__(self,handle=None,value=None,type=None, permissions=None):
-		self.handle = handle
-		self.value = value
+characteristicRules = []
+serviceRules = []
+descriptorRules = []
+attributeRules = []
+
 
 class FirewallEventManager:
 
@@ -44,68 +47,31 @@ class FirewallEventManager:
         print(self.durationSinceLastPacket(eventName))
 
 
-class Service:
-    def __init__(self, beginHandle: int, endHandle: int, uuidValue: int, serviceType: str):
-        self.beginHandle = beginHandle
-        self.endHandle = endHandle
-        self.uuidValue = uuidValue
-        self.serviceType = serviceType
-
-    def __str__(self):
-        return '''
-        Begin Handle -> {0}
-        End Handle -> {1}
-        UUID Value -> {2}
-        ServiceType -> {3}
-        '''.format(hex(self.beginHandle), hex(self.endHandle), self.uuidValue, self.serviceType)
-
-
 class Firewall_GattServer:
-    # Import ATT Config file
-    def nop(self):
-        return None
 
-    def importATT(self, filename="ATT_SLAVE_MITM"):
+    def importATT(self, filename="ATT_SLAVE_MITM", forbiddenAtrributes=[], replaceList=[],server=None):
         print("Importing ATT layer datas from "+filename+" ...")
-        attributes = ["1"]
         config = configparser.ConfigParser()
         config.read(filename)
+        attribute = Attribute()
         for handle in config.sections():
             attHandle = int(handle, 16)
             infos = config[handle]
             attType = infos.get("type")
-            attValue = bytes.fromhex(infos.get("value") if infos.get("value") is not None else "")
-            wholeAttribute = ATT_Attribute(attHandle,attValue)
-            attributes.append(wholeAttribute)
-            # Filter should go there
-            # check_firewall_rules()
-            #   - has firewall a rule for ATT type?
-            # if (0 == 1):
-            #     # put your logic there
-            #     ...
-            # #   - has firewall a rule for ATT service?
-            # if (0 == 1):
-            #     # put your logic there
-            #     ...
-            # #   - has firewall a rule for banning system id?
-            # if (0 == 1):
-            #     # put your logic there
-            #     ...
-        return attributes
+            attValue = bytes.fromhex(
+                infos.get("value") if infos.get("value") is not None else "")
+            attribute = Attribute(attHandle, attType, attValue)
+            forbidden = self.__authorizeGattInfo(attribute, forbiddenAtrributes)
+            if forbidden:
+                result = self.__getReplacement(attribute,replaceList)
+                if result != False:
+                    server.addAttribute(handle=attribute.ATThandle,value=attribute.ATTvalue,type=attribute.ATTvalue,permissions=["Read","Write"])
+            else:
+                server.addAttribute(handle=attHandle,value=attValue,type=attType,permissions=["Read","Write"])
 
-    """
-    "Je peux vous proposer une approche intéressante:
-    l'idée serait de manipuler les requêtes de découverte des services pour exposer
-    au Master un serveur GATT différent de celui proposé par l'objet.
-    Par exemple, pouvoir supprimer séléctivement certaines characteristics sensibles,
-    certains services qui leakent des infos sur l'objet, etc. Evidemment,
-    le MiTM devrait faire la "correspondance" entre le serveur GATT "réel" et celui exposé au Central.
-    """
-# cette fonction d
 
-    def importGATT(self, filename="GATT_SLAVE_MITM"):
+    def importGATT(self, filename="GATT_SLAVE_MITM", forbiddenServices=[], forbiddenCharacteristics=[], forbiddenDescriptors=[],server=None):
         print("Importing GATT layer datas from "+filename+" ...")
-        primaryServices = []
         config = configparser.ConfigParser()
         config.read(filename)
         for element in config.sections():
@@ -115,28 +81,80 @@ class Firewall_GattServer:
                     startHandle = int(element, 16)
                     endHandle = int(infos.get("endhandle"), 16)
                     uuid = bytes.fromhex(infos.get("uuid"))
-                    primaryServices.append(Service(beginHandle=startHandle, endHandle=endHandle, uuidValue=infos.get(
-                        "uuid"), serviceType=infos.get('servicetype')))
-                    if infos.get("servicetype") == "primary":
-                        # self.server.addPrimaryService(uuid,startHandle)
-                        self.nop()
-                    else:
-                        # self.server.addSecondaryService(uuid,startHandle)
-                        self.nop()
-                # elif infos.get("type") == "characteristic":
-                #     declarationHandle = int(element, 16)
-                #     uuid = bytes.fromhex(infos.get("uuid"))
-                #     valueHandle = int(infos.get("valuehandle"), 16)
-                #     value = bytes.fromhex(infos.get("value"))
-                #     permissions = infos.get("permissions").split(",")
-                #     # self.server.addCharacteristic(uuid,value,declarationHandle,valueHandle,permissions)
-                # elif infos.get("type") == "descriptor":
-                #     handle = int(element, 16)
-                #     uuid = bytes.fromhex(infos.get("uuid"))
-                #     value = bytes.fromhex(infos.get("value"))
-                    # self.server.addDescriptor(uuid, value, handle)
-        return primaryServices
+                    service = Service(beginHandle=startHandle,
+                                      endHandle=endHandle, uuidValue=uuid, serviceType=infos.get('servicetype'))
+                    forbidden = self.__authorizeGattInfo(service, forbiddenServices)
+                    # print(" Ce service a été {0} ".format(
+                    #     'refusé' if forbidden else 'autorisé'))
+                    if not forbidden:
+                        if infos.get("servicetype") == "primary":
+                            server.addPrimaryService(uuid,startHandle)
+                        else:
+                            server.addSecondaryService(uuid,startHandle)                
+                elif infos.get("type") == "characteristic":
+                    declarationHandle = int(element, 16)
+                    uuid = bytes.fromhex(infos.get("uuid"))
+                    valueHandle = int(infos.get("valuehandle"), 16)
+                    value = bytes.fromhex(infos.get("value"))
+                    permissions = infos.get("permissions").split(",")
+                    characteristic = Characteristic(declarationHandle=declarationHandle,
+                                                    uuid=uuid, valueHandle=valueHandle, value=value, permissions=permissions)
+                    forbidden = self.__authorizeGattInfo(
+                        characteristic, forbiddenCharacteristics)
+                    # print(" Ce Characteristic a été {0} ".format(
+                    #     'refusé' if forbidden else 'autorisé'))
+                    #Add To Servers
+                    if not forbidden:
+                        server.addCharacteristic(uuid,value,declarationHandle,valueHandle,permissions)
+                elif infos.get("type") == "descriptor":
+                    handle = int(element, 16)
+                    uuid = bytes.fromhex(infos.get("uuid"))
+                    value = bytes.fromhex(infos.get("value"))
+                    descriptor = Descriptor(
+                        handle=handle, uuid=uuid, value=value)
+                    forbidden = self.__authorizeGattInfo(
+                        descriptor, forbiddenDescriptors)
+                    if not forbidden:
+                        server.addDescriptor(uuid,value,handle)
 
-    def doLogic(self, variable):
-        print(variable)
-        print("\n")
+    def __authorizeGattInfo(self, gattInformation, gattForbiddenRules):
+        return gattInformation in gattForbiddenRules
+
+    def __getReplacement(self, attribute, replaceList):
+        for substitutionTuple in replaceList:
+            if substitutionTuple[0] == attribute:
+                return substitutionTuple[1]
+        return False
+    
+    def doFiltering(self,characteristicRules,serviceRules,descriptorRules,attributeRules,gatt_modifier_rules):
+        self.importATT("/Users/ahmed/mirage/ATT_SLAVE_MITM",attributeRules,gatt_modifier_rules)
+        self.importGATT('/Users/ahmed/mirage/GATT_SLAVE_MITM',serviceRules,characteristicRules, descriptorRules)
+
+
+def checkRules(pathOfBleTables):
+    global gatt_modifier_rules
+    global characteristicRules
+    global serviceRules
+    global descriptorRules
+    global attributeRules
+    # Parse file
+    parsedFile = rm.parseFile(pathOfBleTables)
+    # Extract GATTFILTER RULES
+    if(rm.GATT_FILTER_SECTION in parsedFile):
+        gatt_filter_rules = rm.getGattFilterRules(
+            parsedFile[rm.GATT_FILTER_SECTION])
+    # Extract ATT SUBSTITUTION RULES
+    if(rm.GATT_MODIFIER_SECTION in parsedFile):
+        gatt_modifier_rules = rm.getGattModifierRules(
+            parsedFile[rm.GATT_MODIFIER_SECTION])
+
+    # Filter Rules By Type
+    characteristicRules = rm.getCharacteristicRules(gatt_filter_rules)
+    serviceRules = rm.getServiceRules(gatt_filter_rules)
+    descriptorRules = rm.getDescriptorRules(gatt_filter_rules)
+    attributeRules = rm.getAttributeRules(gatt_filter_rules)
+
+# def doFiltering(characteristicRules,serviceRules,descriptorRules,attributeRules,gatt_modifier_rules):
+#     firewall = Firewall_GattServer()
+#     firewall.importATT("/Users/ahmed/mirage/ATT_SLAVE_MITM",attributeRules,gatt_modifier_rules)
+#     firewall.importGATT('/Users/ahmed/mirage/GATT_SLAVE_MITM',serviceRules,characteristicRules, descriptorRules)

@@ -94,58 +94,6 @@ class mitm_test(scenario.Scenario):
             self.a2mEmitter.sendp(ble.BLEErrorResponse(request=0x04,ecode=response,handle=packet.startHandle))
         return False
 
-    # Check if . is authorized/banned in firewall rules
-    def __firewallParser(self, rule):
-        pass
-
-    # Import ATT Config file
-    def __importATT(self, filename="ATT_SLAVE_MITM"):
-        io.info("Importing ATT layer datas from "+filename+" ...")
-        attributes = []
-        config = configparser.ConfigParser()
-        config.read(filename)
-        for handle in config.sections():
-            attHandle = int(handle,16)
-            infos = config[handle]
-            attType = infos.get("type")
-            attValue = bytes.fromhex(infos.get("value") if infos.get("value") is not None else "")
-            # Filter should go there
-            self.server.addAttribute(handle=attHandle,value=attValue,type=attType,permissions=["Read","Write"])
-        return False
-
-    # Import GATT Config file 
-    def __importGATT(self, filename="GATT_SLAVE_MITM"):
-        io.info("Importing GATT layer datas from "+filename+" ...")        
-        config = configparser.ConfigParser()
-        config.read(filename)
-        for element in config.sections():
-            infos=config[element]
-            if "type" in infos:
-                print(infos.get('type'))
-                if infos.get("type") == "service":
-                    io.info("Services ! !")
-                    startHandle = int(element,16)
-                    endHandle = int(infos.get("endhandle"),16)
-                    uuid = bytes.fromhex(infos.get("uuid"))
-                    if infos.get("servicetype") == "primary":
-                        self.server.addPrimaryService(uuid,startHandle)
-                    else:
-                        self.server.addSecondaryService(uuid,startHandle)
-                elif infos.get("type") == "characteristic":
-                    declarationHandle = int(element,16)
-                    uuid = bytes.fromhex(infos.get("uuid"))
-                    valueHandle = int(infos.get("valuehandle"),16)
-                    value = bytes.fromhex(infos.get("value"))
-                    permissions = infos.get("permissions").split(",")
-                    self.server.addCharacteristic(uuid,value,declarationHandle,valueHandle,permissions)
-                elif infos.get("type") == "descriptor":
-                    handle = int(element, 16)
-                    uuid = bytes.fromhex(infos.get("uuid"))
-                    value = bytes.fromhex(infos.get("value"))
-                    self.server.addDescriptor(uuid,value,handle)
-        return False
-        
-
     def __fileExists(self,filename):
         return os.path.isfile(filename)
 
@@ -153,13 +101,27 @@ class mitm_test(scenario.Scenario):
     def __setGattServer(self, GATT_SLAVE_FILE, ATT_SLAVE_FILE):
         # init server
         self.server = ble.GATT_Server()
+        firewallGattServer = Firewall_GattServer()
+        #initParsing
+        io.info("Started Parsing")
+        checkRules("/Users/ahmed/mirage/mirage/tables/ble_tables.txt")
+        io.info("Checking Global Vars")
+        print(characteristicRules)
+        print(descriptorRules)
+        print(serviceRules)
+        print(attributeRules)
+        io.info("Finished checking Global Vars")
         io.info("MITM: Starting MITM ATT / GATT ... ")
         if ATT_SLAVE_FILE != "" and self.__fileExists(ATT_SLAVE_FILE):
             io.info("MITM: Importing ATT_SLAVE structure")
-            self.__importATT(ATT_SLAVE_FILE)
+            firewallGattServer.importATT(forbiddenAtrributes=attributeRules,replaceList=gatt_modifier_rules,server=self.server)
+            print('finishing import ATT')
+            #self.__importATT(ATT_SLAVE_FILE)
         elif GATT_SLAVE_FILE != "" and self.__fileExists(GATT_SLAVE_FILE):
             io.info("MITM: Importing GATT_SLAVE structure")
-            self.__importGATT(GATT_SLAVE_FILE)
+            #self.__importGATT(GATT_SLAVE_FILE)
+            firewallGattServer.importGATT(forbiddenServices=serviceRules,forbiddenCharacteristics=characteristicRules,forbiddenDescriptors=descriptorRules,server=self.server)
+            print('finishing import GATT')
         else:
             io.info("MITM: No filename provided : empty database !")
 

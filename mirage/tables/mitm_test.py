@@ -112,58 +112,6 @@ class mitm_test(scenario.Scenario):
             self.a2mEmitter.sendp(ble.BLEErrorResponse(request=0x04,ecode=response,handle=packet.startHandle))
         return False
 
-    # Check if . is authorized/banned in firewall rules
-    def __firewallParser(self, rule):
-        pass
-
-    # Import ATT Config file
-    def __importATT(self, filename="ATT_SLAVE_MITM"):
-        io.info("Importing ATT layer datas from "+filename+" ...")
-        attributes = []
-        config = configparser.ConfigParser()
-        config.read(filename)
-        for handle in config.sections():
-            attHandle = int(handle,16)
-            infos = config[handle]
-            attType = infos.get("type")
-            attValue = bytes.fromhex(infos.get("value") if infos.get("value") is not None else "")
-            # Filter should go there
-            self.server.addAttribute(handle=attHandle,value=attValue,type=attType,permissions=["Read","Write"])
-        return False
-
-    # Import GATT Config file 
-    def __importGATT(self, filename="GATT_SLAVE_MITM"):
-        io.info("Importing GATT layer datas from "+filename+" ...")        
-        config = configparser.ConfigParser()
-        config.read(filename)
-        for element in config.sections():
-            infos=config[element]
-            if "type" in infos:
-                print(infos.get('type'))
-                if infos.get("type") == "service":
-                    io.info("Services ! !")
-                    startHandle = int(element,16)
-                    endHandle = int(infos.get("endhandle"),16)
-                    uuid = bytes.fromhex(infos.get("uuid"))
-                    if infos.get("servicetype") == "primary":
-                        self.server.addPrimaryService(uuid,startHandle)
-                    else:
-                        self.server.addSecondaryService(uuid,startHandle)
-                elif infos.get("type") == "characteristic":
-                    declarationHandle = int(element,16)
-                    uuid = bytes.fromhex(infos.get("uuid"))
-                    valueHandle = int(infos.get("valuehandle"),16)
-                    value = bytes.fromhex(infos.get("value"))
-                    permissions = infos.get("permissions").split(",")
-                    self.server.addCharacteristic(uuid,value,declarationHandle,valueHandle,permissions)
-                elif infos.get("type") == "descriptor":
-                    handle = int(element, 16)
-                    uuid = bytes.fromhex(infos.get("uuid"))
-                    value = bytes.fromhex(infos.get("value"))
-                    self.server.addDescriptor(uuid,value,handle)
-        return False
-        
-
     def __fileExists(self,filename):
         return os.path.isfile(filename)
 
