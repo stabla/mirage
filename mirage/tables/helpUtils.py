@@ -1,4 +1,4 @@
-from assignedNumbers import AssignedNumbers
+from mirage.tables.assignedNumbers import AssignedNumbers
 import struct,string,copy
 
 class Dissector:

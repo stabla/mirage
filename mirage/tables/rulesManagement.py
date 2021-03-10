@@ -1,7 +1,6 @@
-import grammarDef as bleTableGrammar
-from typing import List
-from utils import *
-from bleATTManager import Service,Characteristic,Descriptor,Attribute
+import mirage.tables.grammarDef as bleTableGrammar
+from mirage.tables.utils import *
+from mirage.tables.bleATTManager import Service,Characteristic,Descriptor,Attribute
 
 GATT_FILTER_SECTION = 'GATT_FILTER'
 BLE_TABLES_SECTION = 'BLE_TABLES'

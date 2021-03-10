@@ -1,6 +1,6 @@
 
 import configparser
-from helpUtils import UUID, isHexadecimal, isPrintable
+from mirage.tables.helpUtils import UUID, isHexadecimal, isPrintable
 
 
 class Attribute:
