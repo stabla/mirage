@@ -59,9 +59,9 @@ class Firewall_GattServer:
             if forbidden:
                 print(attribute)
                 print('was refused')
-                # result = self.__getReplacement(attribute,replaceList)
-                # if result != False:
-                #     server.addAttribute(handle=attribute.ATThandle,value=attribute.ATTvalue,type=attribute.ATTvalue,permissions=["Read","Write"])
+                result = self.__getReplacement(attribute,replaceList)
+                if result != False:
+                    server.addAttribute(handle=attribute.ATThandle,value=attribute.ATTvalue,type=attribute.ATTvalue,permissions=["Read","Write"])
             else:
                 server.addAttribute(handle=attHandle,value=attValue,type=attType,permissions=["Read","Write"])
                 pass

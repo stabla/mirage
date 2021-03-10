@@ -72,6 +72,7 @@ class mitm_test(scenario.Scenario):
     """
     GATT CENTRAL
     """
+
     def onMasterReadByGroupTypeRequest(self, packet):
         io.info("Read By Group Type Request (from Master): startHandle = "+hex(packet.startHandle)+
                 " / endHandle = "+hex(packet.endHandle)+" / uuid = "+hex(packet.uuid))
@@ -112,6 +113,35 @@ class mitm_test(scenario.Scenario):
             self.a2mEmitter.sendp(ble.BLEErrorResponse(request=0x04,ecode=response,handle=packet.startHandle))
         return False
 
+    def onSlaveConnect(self, initiatorType="public"):
+        # Entering the GATT Entering Cloning mode
+        while (self.a2sEmitter.getMode() != "NORMAL"):
+            utils.wait(seconds=1)
+            print(self.a2sEmitter.getMode())
+            
+        address = utils.addressArg(self.args["TARGET"])
+        connectionType = self.args["CONNECTION_TYPE"]
+        self.responderAddress = address
+        self.responderAddressType = (b"\x00" if self.args["CONNECTION_TYPE"] == "public" else b"\x01")
+
+        io.info("MITM: Connecting to slave "+address+"...")
+        self.a2sEmitter.sendp(ble.BLEConnect(dstAddr=address, type=connectionType, initiatorType=initiatorType))
+
+        while not self.a2sEmitter.isConnected(): utils.wait(seconds=0.5)
+
+        # If conneced correctly, then clone the GATT Server
+        if self.a2sEmitter.isConnected():
+            io.success("Connected on slave : "+self.a2sReceiver.getCurrentConnection())
+            io.info("MITM: Cloning GATT Server / ATT Attributes ... ")
+            self.__getGattSlave("GATT_SLAVE_MITM", "ATT_SLAVE_MITM")
+            io.success("MITM: Cloning has been finished ... ")
+            io.info("MITM: GATT/ATT starting server ...")
+            self.__setGattServer("GATT_SLAVE_MITM", "ATT_SLAVE_MITM")
+            io.success("MITM: GATT/ATT server running ... ")
+        else:
+            io.fail("MITM: No active connections !") 
+        return False
+
     def __fileExists(self,filename):
         return os.path.isfile(filename)
 
@@ -121,27 +151,22 @@ class mitm_test(scenario.Scenario):
         self.server = ble.GATT_Server()
         firewallGattServer = Firewall_GattServer()
         #initParsing
-        io.info("Started Parsing")
-        checkRules("/home/pi/mirage/mirage/tables/ble_tables.txt")
-        io.info("Checking Global Vars")
-        print(characteristicRules)
-        print(descriptorRules)
-        print(serviceRules)
-        print(attributeRules)
-        io.info("Finished checking Global Vars")
+        io.info("Doing Parsing of rules")
+        (characteristicRules,serviceRules,descriptorRules,attributeRules,gatt_modifier_rules) = checkRules("/home/pi/mirage/mirage/tables/ble_tables.txt")
         io.info("MITM: Starting MITM ATT / GATT ... ")
-        if ATT_SLAVE_FILE != "" and self.__fileExists(ATT_SLAVE_FILE):
-            io.info("MITM: Importing ATT_SLAVE structure")
-            firewallGattServer.importATT(forbiddenAtrributes=attributeRules,replaceList=gatt_modifier_rules,server=self.server)
-            print('finishing import ATT')
-            #self.__importATT(ATT_SLAVE_FILE)
-        elif GATT_SLAVE_FILE != "" and self.__fileExists(GATT_SLAVE_FILE):
+        # if ATT_SLAVE_FILE != "" and self.__fileExists(ATT_SLAVE_FILE):
+        #     io.info("MITM: Importing ATT_SLAVE structure")
+        #     firewallGattServer.importATT(filename=ATT_SLAVE_FILE,forbiddenAtrributes=attributeRules,replaceList=gatt_modifier_rules,server=self.server)
+        #     print('finishing import ATT')
+        if GATT_SLAVE_FILE != "" and self.__fileExists(GATT_SLAVE_FILE):
             io.info("MITM: Importing GATT_SLAVE structure")
-            #self.__importGATT(GATT_SLAVE_FILE)
-            firewallGattServer.importGATT(forbiddenServices=serviceRules,forbiddenCharacteristics=characteristicRules,forbiddenDescriptors=descriptorRules,server=self.server)
+            firewallGattServer.importGATT(filename=GATT_SLAVE_FILE,forbiddenServices=serviceRules,forbiddenCharacteristics=characteristicRules,forbiddenDescriptors=descriptorRules,server=self.server)
             print('finishing import GATT')
         else:
             io.info("MITM: No filename provided : empty database !")
+        #print(self.server.database.show())
+        # print("STRUCTURE SERVEUR GATT")
+        # print(self.server.database.showGATT())
 
     # Export heart of the function here 
     def __getGattSlave(self, GATT_SLAVE_FILE, ATT_SLAVE_FILE):
@@ -164,34 +189,3 @@ class mitm_test(scenario.Scenario):
         open(m['ATT_FILE'], 'w').close()
         # Execute to fill ATT_FILE
         m.execute()
-
-    def onSlaveConnect(self, initiatorType="public"):
-        # Entering the GATT Entering Cloning mode
-        while (self.a2sEmitter.getMode() != "NORMAL"):
-            utils.wait(seconds=1)
-            print(self.a2sEmitter.getMode())
-            
-        address = utils.addressArg(self.args["TARGET"])
-        connectionType = self.args["CONNECTION_TYPE"]
-        self.responderAddress = address
-        self.responderAddressType = (b"\x00" if self.args["CONNECTION_TYPE"] == "public" else b"\x01")
-
-        io.info("MITM: Connecting to slave "+address+"...")
-        self.a2sEmitter.sendp(ble.BLEConnect(dstAddr=address, type=connectionType, initiatorType=initiatorType))
-
-        while not self.a2sEmitter.isConnected(): utils.wait(seconds=0.5)
-
-        # If conneced correctly, then clone the GATT Server
-        if self.a2sEmitter.isConnected():
-            io.success("Connected on slave : "+self.a2sReceiver.getCurrentConnection())
-            
-            io.info("MITM: Cloning GATT Server / ATT Attributes ... ")
-            self.__getGattSlave("GATT_SLAVE_MITM", "ATT_SLAVE_MITM")
-            io.success("MITM: Cloning has been finished ... ")
-            io.info("MITM: GATT/ATT starting server ...")
-            self.__setGattServer("GATT_SLAVE_MITM", "ATT_SLAVE_MITM")
-            io.success("MITM: GATT/ATT server running ... ")
-        else:
-            io.fail("MITM: No active connections !") 
-
-        return False

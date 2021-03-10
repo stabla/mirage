@@ -7,7 +7,7 @@ default deny
 END BLE_TABLES
 GATT_FILTER
 entity GATT type Service serviceType primary uuid 1800 endHandle 0x0005
-entity GATT type Characteristic uuid 2a00 valueHandle 0x0003 value None
+entity GATT type Characteristic uuid 2a24 valueHandle 0x000b value 424b2d424c452d312e30
 entity GATT type Descriptor handle 0x0026 uuid 2902 value 0000
 entity GATT type Descriptor handle 0x0021 uuid 2902 value 0000
 entity ATT type Attribute handle 0x000b type 2a24 value 424b2d424c452d312e30
