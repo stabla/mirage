@@ -134,7 +134,9 @@ class Firewall_GattServer:
 
 def checkRules(pathOfBleTables):
     # Parse file
+    print("PARSING")
     parsedFile = rm.parseFile(pathOfBleTables)
+    print("DONE")
     # Extract GATTFILTER RULES
     if(rm.GATT_FILTER_SECTION in parsedFile):
         gatt_filter_rules = rm.getGattFilterRules(
@@ -144,8 +146,10 @@ def checkRules(pathOfBleTables):
         gatt_modifier_rules = rm.getGattModifierRules(
             parsedFile[rm.GATT_MODIFIER_SECTION])
     # Filter Rules By Type
+    print("FILTERING START")
     characteristicRules = rm.getCharacteristicRules(gatt_filter_rules)
     serviceRules = rm.getServiceRules(gatt_filter_rules)
     descriptorRules = rm.getDescriptorRules(gatt_filter_rules)
     attributeRules = rm.getAttributeRules(gatt_filter_rules)
+    print("FILTERING DONE")
     return (characteristicRules,serviceRules,descriptorRules,attributeRules,gatt_modifier_rules)
