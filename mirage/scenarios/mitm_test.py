@@ -13,6 +13,15 @@ class mitm_test(scenario.Scenario):
         self.firewallManager = FirewallEventManager()
         self.dependencies = ["ble_discover"] # for GATT
         io.info("MITM started !")
+
+       # Load module
+        self.m = utils.loadModule('ble_discover')
+        self.m['INTERFACE'] = self.args['INTERFACE1']
+        self.m["START_HANDLE"] = "0x0001"
+        self.m["END_HANDLE"] = "0xFFFF"
+        self.m["FILTER_BY"] = ""
+        self.m["FILTER"] = ""
+
         return True
     
     def onEnd(self):
@@ -70,8 +79,9 @@ class mitm_test(scenario.Scenario):
         return "{0}_{1}_{2} ".format(str(handle),str(value),handlerName)
 
     """
-    GATT CENTRAL
+        CENTRAL GATT
     """
+
     def onMasterReadByGroupTypeRequest(self, packet):
         io.info("Read By Group Type Request (from Master): startHandle = "+hex(packet.startHandle)+
                 " / endHandle = "+hex(packet.endHandle)+" / uuid = "+hex(packet.uuid))
@@ -118,6 +128,7 @@ class mitm_test(scenario.Scenario):
             utils.wait(seconds=1)
             print(self.a2sEmitter.getMode())
             
+        # Verify the connection type
         address = utils.addressArg(self.args["TARGET"])
         connectionType = self.args["CONNECTION_TYPE"]
         self.responderAddress = address
@@ -131,9 +142,14 @@ class mitm_test(scenario.Scenario):
         # If conneced correctly, then clone the GATT Server
         if self.a2sEmitter.isConnected():
             io.success("Connected on slave : "+self.a2sReceiver.getCurrentConnection())
-            io.info("MITM: Cloning GATT Server / ATT Attributes ... ")
-            self.__getGattSlave("GATT_SLAVE_MITM", "ATT_SLAVE_MITM")
+            # Cloning the ATT
+            io.info("MITM: Cloning Slave's ATT Server ...")
+            self.__getAttSlave("ATT_SLAVE_MITM")
+            # Cloning the GATT
+            io.info("MITM: Cloning GATT Server ... ")
+            self.__getGattSlave("GATT_SLAVE_MITM")
             io.success("MITM: Cloning has been finished ... ")
+            # Starting the server
             io.info("MITM: GATT/ATT starting server ...")
             self.__setGattServer("GATT_SLAVE_MITM", "ATT_SLAVE_MITM")
             io.success("MITM: GATT/ATT server running ... ")
@@ -141,50 +157,53 @@ class mitm_test(scenario.Scenario):
             io.fail("MITM: No active connections !") 
         return False
 
+    # Check if file exists
     def __fileExists(self,filename):
         return os.path.isfile(filename)
 
-    # Initialise server GATT and run it
+    # Initialise server GATT 
     def __setGattServer(self, GATT_SLAVE_FILE, ATT_SLAVE_FILE):
         # init server
         self.server = ble.GATT_Server()
+        # Create GattServer object
         firewallGattServer = Firewall_GattServer()
-        #initParsing
-        io.info("Doing Parsing of rules")
+        # initParsing
+        io.info("MITM: Parsing of rules...")
         (characteristicRules,serviceRules,descriptorRules,attributeRules,gatt_modifier_rules) = checkRules('/home/pi/mirage/mirage/tables/scenario/ble_tables.txt')
         io.info("MITM: Starting MITM ATT / GATT ... ")
-        # if ATT_SLAVE_FILE != "" and self.__fileExists(ATT_SLAVE_FILE):
-        #     io.info("MITM: Importing ATT_SLAVE structure")
-        #     firewallGattServer.importATT(filename=ATT_SLAVE_FILE,forbiddenAtrributes=attributeRules,replaceList=gatt_modifier_rules,server=self.server)
-        #     print('finishing import ATT')
+        # Import ATT Structure 
+        if ATT_SLAVE_FILE != "" and self.__fileExists(ATT_SLAVE_FILE):
+             io.info("MITM: Importing ATT_SLAVE structure")
+             firewallGattServer.importATT(filename=ATT_SLAVE_FILE,forbiddenAtrributes=attributeRules,replaceList=gatt_modifier_rules,server=self.server)
+             print('MITM: Finishing import ATT')
+        # Import GATT Structure
         if GATT_SLAVE_FILE != "" and self.__fileExists(GATT_SLAVE_FILE):
             io.info("MITM: Importing GATT_SLAVE structure")
             firewallGattServer.importGATT(filename=GATT_SLAVE_FILE,forbiddenServices=serviceRules,forbiddenCharacteristics=characteristicRules,forbiddenDescriptors=descriptorRules,server=self.server)
-            print('finishing import GATT')
+            print('MITM: Finishing import GATT')
+        # In case No file is provided
         else:
             io.info("MITM: No filename provided : empty database !")
-        #print(self.server.database.show())
+        # print(self.server.database.show())
         # print("STRUCTURE SERVEUR GATT")
         # print(self.server.database.showGATT())
 
-    # Export heart of the function here 
-    def __getGattSlave(self, GATT_SLAVE_FILE, ATT_SLAVE_FILE):
-        # Load module
-        m = utils.loadModule('ble_discover')
-        # Set parameters
-        m["WHAT"] = "all"
-        m['INTERFACE'] = self.args['INTERFACE1']
-        m["START_HANDLE"] = "0x0001"
-        m["END_HANDLE"] = "0xFFFF"
-        m["FILTER_BY"] = ""
-        m["FILTER"] = ""
-        m['GATT_FILE']=GATT_SLAVE_FILE
-        open(m['GATT_FILE'], 'w').close()
-        # Execute to fill GATT_FILE
-        m.execute()
-
-        m["WHAT"] = "attributes"
-        m['ATT_FILE']=ATT_SLAVE_FILE
-        open(m['ATT_FILE'], 'w').close()
+    # Export Slave's ATT Server
+    def __getAttSlave(self, ATT_SLAVE_FILE):
+        # Set attributes
+        self.m["WHAT"] = "attributes"
+        self.m['ATT_FILE']=ATT_SLAVE_FILE
+        # Empty file before filling
+        open(self.m['ATT_FILE'], 'w').close()
         # Execute to fill ATT_FILE
-        m.execute()
+        self.m.execute()
+
+    # Export Slave's GATT
+    def __getGattSlave(self, GATT_SLAVE_FILE):
+        # Set attributes
+        self.m["WHAT"] = "all"
+        self.m['GATT_FILE']=GATT_SLAVE_FILE
+        # Empty file before filling
+        open(self.m['GATT_FILE'], 'w').close()
+        # Execute to fill GATT_FILE
+        self.m.execute()

@@ -50,6 +50,7 @@ class BleTable:
 def parseFile(pathOfFile: str):
     parsedText = {}
     #Open File
+    
     with open(pathOfFile, 'r') as file:
         fileConfiguration = file.read()
     #Apply Regex to delimitate file parts
