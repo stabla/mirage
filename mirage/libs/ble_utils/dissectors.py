@@ -452,4 +452,4 @@ class HIDoverGATTKeystroke(Dissector):
 
 	def __str__(self):
 		sortie = "key="+str(self.content["key"])+",ctrl="+("yes" if self.content["ctrl"] else "no")+",alt="+("yes" if self.content["alt"] else "no")+",shift="+("yes" if self.content["shift"] else "no")+",gui="+("yes" if self.content["gui"] else "no")
-		return "Keystroke("+sortie+")"
+		return "Keystroke("+sortie+")" 

@@ -79,9 +79,9 @@ class mitm_test(scenario.Scenario):
         return "{0}_{1}_{2} ".format(str(handle),str(value),handlerName)
 
     """
-        CENTRAL GATT
+        MIDDLE FILTERING GATT SERVER 
     """
-
+    # When receiving a packet for GATT
     def onMasterReadByGroupTypeRequest(self, packet):
         io.info("Read By Group Type Request (from Master): startHandle = "+hex(packet.startHandle)+
                 " / endHandle = "+hex(packet.endHandle)+" / uuid = "+hex(packet.uuid))
@@ -94,6 +94,7 @@ class mitm_test(scenario.Scenario):
             self.a2mEmitter.sendp(ble.BLEErrorResponse(request=0x10,ecode=response,handle=packet.startHandle))
         return False
 
+    # When receiving a packet for ATT
     def onMasterReadByTypeRequest(self, packet):
         io.info("Read By Type Request : startHandle = "+hex(packet.startHandle)+
             " / endHandle = "+hex(packet.endHandle)+" / uuid = "+hex(packet.uuid))
@@ -110,6 +111,9 @@ class mitm_test(scenario.Scenario):
                 self.a2mEmitter.sendp(ble.BLEErrorResponse(request=0x08,ecode=response, handle=packet.startHandle))
         return False
 
+    # NOT USED
+    # When receiving a request FindInfo
+    #
     def onMasterFindInformationRequest(self,packet):
         io.info("Find Information Request : startHandle = "+hex(packet.startHandle)+
             " / endHandle = "+hex(packet.endHandle))
@@ -134,12 +138,14 @@ class mitm_test(scenario.Scenario):
         self.responderAddress = address
         self.responderAddressType = (b"\x00" if self.args["CONNECTION_TYPE"] == "public" else b"\x01")
 
+        # Connecting to Slave
         io.info("MITM: Connecting to slave "+address+"...")
         self.a2sEmitter.sendp(ble.BLEConnect(dstAddr=address, type=connectionType, initiatorType=initiatorType))
 
+        # Wait until connection
         while not self.a2sEmitter.isConnected(): utils.wait(seconds=0.5)
 
-        # If conneced correctly, then clone the GATT Server
+        # When connected, clone the GATT Server
         if self.a2sEmitter.isConnected():
             io.success("Connected on slave : "+self.a2sReceiver.getCurrentConnection())
             # Cloning the ATT
@@ -157,34 +163,33 @@ class mitm_test(scenario.Scenario):
             io.fail("MITM: No active connections !") 
         return False
 
-    # Check if file exists
+    # Check if file exists 
     def __fileExists(self,filename):
         return os.path.isfile(filename)
 
-    # Initialise server GATT 
+    # Initialize GATT Server
     def __setGattServer(self, GATT_SLAVE_FILE, ATT_SLAVE_FILE):
-        # init server
+        # Init server
         self.server = ble.GATT_Server()
         # Create GattServer object
         firewallGattServer = Firewall_GattServer()
-        # initParsing
-        io.info("MITM: Parsing of rules...")
+        # InitParsing
+        io.info("MITM: Parsing of rules ...")
         (characteristicRules,serviceRules,descriptorRules,attributeRules,gatt_modifier_rules) = checkRules('/home/pi/mirage/mirage/tables/scenario/ble_tables.txt')
         io.info("MITM: Starting MITM ATT / GATT ... ")
         # Import ATT Structure 
-        if ATT_SLAVE_FILE != "" and self.__fileExists(ATT_SLAVE_FILE):
-             io.info("MITM: Importing ATT_SLAVE structure")
-             firewallGattServer.importATT(filename=ATT_SLAVE_FILE,forbiddenAtrributes=attributeRules,replaceList=gatt_modifier_rules,server=self.server)
-             print('MITM: Finishing import ATT')
+        # if ATT_SLAVE_FILE != "" and self.__fileExists(ATT_SLAVE_FILE):
+        #     io.info("MITM: Importing ATT_SLAVE structure")
+        #     firewallGattServer.importATT(filename=ATT_SLAVE_FILE,forbiddenAtrributes=attributeRules,replaceList=gatt_modifier_rules,server=self.server)
+        #     print('finishing import ATT')
         # Import GATT Structure
         if GATT_SLAVE_FILE != "" and self.__fileExists(GATT_SLAVE_FILE):
             io.info("MITM: Importing GATT_SLAVE structure")
             firewallGattServer.importGATT(filename=GATT_SLAVE_FILE,forbiddenServices=serviceRules,forbiddenCharacteristics=characteristicRules,forbiddenDescriptors=descriptorRules,server=self.server)
-            print('MITM: Finishing import GATT')
-        # In case No file is provided
+            print('finishing import GATT')
         else:
             io.info("MITM: No filename provided : empty database !")
-        # print(self.server.database.show())
+        #print(self.server.database.show())
         # print("STRUCTURE SERVEUR GATT")
         # print(self.server.database.showGATT())
 
