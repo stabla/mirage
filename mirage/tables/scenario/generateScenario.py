@@ -13,4 +13,5 @@ parsedFile = rm.parseFile('/Users/ahmed/mirage/mirage/tables/scenario/ble_tables
 # Extract BLE_TABLE RULES
 if(rm.BLE_TABLES_SECTION in parsedFile):
     ble_tables_rule = rm.getBleTable(parsedFile[rm.BLE_TABLES_SECTION])
+#print(ble_tables_rule.groupCommandRules()['onMasterPairingRequest'][0])
 generateScenario(ble_tables_rule)

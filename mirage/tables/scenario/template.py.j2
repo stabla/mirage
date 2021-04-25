@@ -4,129 +4,126 @@ from mirage.libs.ble_utils.firewall import *
 import configparser,os.path,subprocess
 
 class mitm_test(scenario.Scenario):
-    {%if ('onMasterPairingRequest' or 'onSlavePairingResponse') in properRules %}
-    #Policies
-    LeSecureConnectionAuthorized = False
-    OoBAuthorized = False
-    minKeySizeAuthorized = 16
-    MiTmProtectionActivated = False
-
-    # Secure connection vars
-    initiatorSecureConnections = None
-    responderSecureConnections = None
+    {%set pairingHandlers = []%}{%if ('onMasterPairingRequest' or 'onSlavePairingResponse') in properRules %}{%if 'onMasterPairingRequest' in properRules  %}
+    {% set _ = pairingHandlers.append('onMasterPairingRequest') %}{% endif %}{%if 'onSlavePairingResponse' in properRules  %}{% set _ = pairingHandlers.append('onSlavePairingResponse') %}{% endif %}{% for handler in pairingHandlers  %} {%set applicableRule = properRules[handler][0] %}{%set permission = True if applicableRule.action =='allow' else False %}
+    {{'initiator' if handler == 'onMasterPairingRequest' else 'responder' }}SecureConnections = {{permission if applicableRule.mode and applicableRule.mode == 'LESecurePairing' else None}}
+    {{'initiator' if handler == 'onMasterPairingRequest' in properRules else 'responder' }}OoB = {{permission if applicableRule.method and applicableRule.method  == 'oob' else None}}
+    {{'initiator' if handler == 'onMasterPairingRequest' in properRules else 'responder' }}MiTm = None
+    {{'initiator' if handler == 'onMasterPairingRequest' in properRules else 'responder' }}MinKeySize =  {{ applicableRule.minKeySize if applicableRule.minKeySize and applicableRule.minKeySize | int > 1 else 16 }}
+    {{'initiator' if handler == 'onMasterPairingRequest' in properRules else 'responder' }}InputOutputCapability = None
+    {% endfor %}
+    # Pairing Methods
     secureConnections = None
-
-    # OoB
-    initiatorOoB = None
-    responderOoB = None
     useOoB = None
-
-    # MiTm
-    initiatorMiTm = None
-    responderMiTm = None
-
-    #MinKeySize
-    initiatorMinKeySize = None
-    responderMinKeySize = None
-
-    # Iocap
-    initiatorInputOutputCapability = None
-    responderInputOutputCapability = None
-
-    # Auth Methods
-    ioCapabilities = None
-    justWorks = None
-    pairingMethod = None    
+    pairingMethod = None
 
     def checkSecureConnection(self, packet, responder=False):
         authPaquet = ble.AuthReqFlag(data=bytes([packet.authentication]))
         flag = 'secureConnections'
         if flag in authPaquet.content:
-            ruleOK = (authPaquet.content[flag] == self.LeSecureConnectionAuthorized)
-            print('LE SecureConnection pairing {0}accepted'.format(
-                '' if ruleOK else 'not '))
-            if responder == False:
+            ruleOK = False
+            if not responder:
+                ruleOK = self.initiatorSecureConnections in (authPaquet.content[flag], None)
                 self.initiatorSecureConnections = authPaquet.content[flag]
             else:
+                ruleOK = self.responderSecureConnections in (authPaquet.content[flag], None)
                 self.responderSecureConnections = authPaquet.content[flag]
+            io.info('LE SecureConnection pairing {0}accepted'.format(
+                '' if ruleOK else 'not '))
             if not ruleOK:
                 return False
+            else:
+                return True
         else:
-            print('No {0} info on this packet... ending the scenario'.format(flag))
+            io.info('No {0} info on this packet... ending the scenario'.format(
+                flag))
             return False
-    
+
     def checkMiTMRule(self, packet, responder=False):
         authPaquet = ble.AuthReqFlag(data=bytes([packet.authentication]))
         flag = 'mitm'
         if flag in authPaquet.content:
-            ruleOK = (authPaquet.content[flag] == self.MiTmProtectionActivated)
-            print('Mitm protection is {0}activated'.format(
-                '' if ruleOK else 'not '))
-            if responder == False:
+            ruleOK = False
+            if not responder:
+                ruleOK = self.initiatorMiTm in (authPaquet.content[flag], None)
                 self.initiatorMiTm = authPaquet.content[flag]
             else:
+                ruleOK = self.responderMiTm in (authPaquet.content[flag], None)
                 self.responderMiTm = authPaquet.content[flag]
+            io.info('Mitm protection is {0}activated'.format(
+                '' if ruleOK else 'not '))
             if not ruleOK:
                 return False
+            else:
+                return True
         else:
-            print('No {0} info on this packet... ending the scenario'.format(flag))
+            io.info('No {0} info on this packet... ending the scenario'.format(
+                flag))
             return False
 
     def checkOoB(self, packet, responder=False):
         # Check OoB
         if hasattr(packet, 'outOfBand'):
-            ruleOK = (packet.outOfBand == self.OoBAuthorized)
-            print('OoB pairing rule is {0}accepted'.format(
-                '' if ruleOK else 'not '))
-            if responder == False:
+            ruleOK = False
+            if not responder:
+                ruleOK = self.initiatorOoB in (packet.outOfBand, None)
                 self.initiatorOoB = packet.outOfBand
             else:
+                ruleOK = self.responderOoB in (packet.outOfBand, None)
                 self.responderOoB = packet.outOfBand
+            io.info('OoB pairing rule is {0}accepted'.format(
+                '' if ruleOK else 'not '))
             if not ruleOK:
                 return False
+            else:
+                return True
         else:
-            print('No outOfBand on this packet... ending the scenario')
+            io.info('No outOfBand on this packet... ending the scenario')
             return False
-
 
     def checkSizeRule(self, packet, responder=False):
         if hasattr(packet, 'maxKeySize'):
-            ruleOK = self.minKeySizeAuthorized >= packet.maxKeySize
-            print('maxKeySize pairing rule is {0}accepted'.format(
-                '' if ruleOK else 'not '))
-            if responder == False:
+            ruleOK = False
+            if not responder:
+                ruleOK = self.initiatorMinKeySize >= packet.maxKeySize
                 self.initiatorMinKeySize = packet.maxKeySize
             else:
+                ruleOK = self.responderMinKeySize >= packet.maxKeySize
                 self.responderMinKeySize = packet.maxKeySize
+            io.info('maxKeySize pairing rule is {0}accepted'.format(
+                '' if ruleOK else 'not '))
             if not ruleOK:
-                return False                
+                return False
+            else:
+                return True
         else:
-            print('No {0} on this packet... ending the scenario'.format('maxKeySize'))
+            io.info('No {0} on this packet... ending the scenario'.format(
+                'maxKeySize'))
             return False
+
     def pairingMethodSelection(self):
         self.secureConnections = self.responderSecureConnections and self.initiatorSecureConnections
         if self.secureConnections:
             io.info("Both devices supports LE secure connections")
             self.useOOB = self.initiatorOoB and self.responderOoB
-            self.ioCapabilities = self.responderMiTm or self.initiatorMiTm
+            ioCapabilities = self.responderMiTm or self.initiatorMiTm
             self.justWorks = not self.responderMiTm and not self.initiatorMiTm
 
         else:
             io.info(
-                "At least one of the devices doesn't support LE secure connections")
+                "At least one of the devices doesn't support LE secure connections"
+            )
             self.useOOB = self.initiatorOoB or self.responderOoB
             #TODO : Put back
-            self.ioCapabilities = False
-            self.justWorks = not self.responderMiTm and not self.initiatorMiTm
+            ioCapabilities = False
+            justWorks = not self.responderMiTm and not self.initiatorMiTm
 
-        io.chart(["Out Of Bond", "IO Capabilities", "Just Works"],
-                 [
-            ["yes" if self.useOOB else "no",
-                "yes" if self.ioCapabilities else "no",
-                "yes" if self.justWorks else "no"
-             ]])
+        io.chart(["Out Of Bond", "IO Capabilities", "Just Works"], [[
+            "yes" if self.useOOB else "no", "yes" if ioCapabilities else "no",
+            "yes" if justWorks else "no"
+        ]])
 
-        if self.ioCapabilities:
+        if ioCapabilities:
             initiator = "NoInputNoOutput"
             responder = "NoInputNoOutput"
             if self.initiatorInputOutputCapability.data[0] == 0x00:
@@ -152,7 +149,9 @@ class mitm_test(scenario.Scenario):
                 responder = "KeyboardDisplay"
 
             pairingMethod = ble.PairingMethods.getPairingMethod(
-                secureConnections=self.secureConnections, initiatorInputOutputCapability=initiator, responderInputOutputCapability=responder)
+                secureConnections=self.secureConnections,
+                initiatorInputOutputCapability=initiator,
+                responderInputOutputCapability=responder)
 
             if pairingMethod == ble.PairingMethods.JUST_WORKS:
                 self.pairingMethod = "JustWorks"
@@ -213,15 +212,16 @@ class mitm_test(scenario.Scenario):
             # packet is allowed
             return True
         else : #default case of the rule
-            return {{'self.__drop(currentEvent)' if not BleTable.default else True}}
-        {% endif %}{% endfor %}{%elif ('onMasterPairingRequest' or 'onSlavePairingResponse') in properRules and handler in ['onMasterPairingRequest','onMasterPairingRequest']%}
-        # Check if we accept use LeSecureConnections or Legacy
-        self.checkSecureConnection(packet)
+            return {{'self.__drop(currentEvent)' if not BleTable.default else True}} {% endif %}{% endfor %}{%elif handler in ['onMasterPairingRequest','onSlavePairingResponse']%}
+        # Check if we accept use LeSecureConnections or Legacy {% set parameter = 'packet' if handler == 'onMasterPairingRequest' else 'packet, True' %}
+        checkSecureConnectionRuleOK =  self.checkSecureConnection({{parameter}})
         #Check OoB
-        self.checkOoB(packet)
+        checkOoBRuleOK = self.checkOoB({{parameter}})
         # Check minKeySize
-        self.checkSizeRule(packet)
-        self.checkMiTMRule(packet){% endif %}
+        checkSizeRuleOK = self.checkSizeRule({{parameter}})
+        checkMitmRuleOK = self.checkMiTMRule({{parameter}})
+        return checkSecureConnectionRuleOK and checkOoBRuleOK and checkSizeRuleOK and checkMitmRuleOK
+        {% endif %}
 {% endfor %}
     # Drop packets and reset counter of packets after drops
     def __drop(self, name: str):
@@ -331,21 +331,12 @@ class mitm_test(scenario.Scenario):
         io.info("MITM: Parsing of rules ...")
         (characteristicRules,serviceRules,descriptorRules,attributeRules,gatt_modifier_rules) = checkRules('{{fileToParse}}')
         io.info("MITM: Starting MITM ATT / GATT ... ")
-        # Import ATT Structure 
-        # if ATT_SLAVE_FILE != "" and self.__fileExists(ATT_SLAVE_FILE):
-        #     io.info("MITM: Importing ATT_SLAVE structure")
-        #     firewallGattServer.importATT(filename=ATT_SLAVE_FILE,forbiddenAtrributes=attributeRules,replaceList=gatt_modifier_rules,server=self.server)
-        #     print('finishing import ATT')
-        # Import GATT Structure
         if GATT_SLAVE_FILE != "" and self.__fileExists(GATT_SLAVE_FILE):
             io.info("MITM: Importing GATT_SLAVE structure")
             firewallGattServer.importGATT(filename=GATT_SLAVE_FILE,forbiddenServices=serviceRules,forbiddenCharacteristics=characteristicRules,forbiddenDescriptors=descriptorRules,server=self.server)
             print('finishing import GATT')
         else:
             io.info("MITM: No filename provided : empty database !")
-        #print(self.server.database.show())
-        # print("STRUCTURE SERVEUR GATT")
-        # print(self.server.database.showGATT())
 
     # Export Slave's ATT Server
     def __getAttSlave(self, ATT_SLAVE_FILE):

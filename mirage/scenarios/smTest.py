@@ -6,15 +6,15 @@ class smTest(scenario.Scenario):
 
     #Initatior (BLE Pairing request)
     initiatorSecureConnections = False
-    initiatorOoB = False
-    initiatorMiTm = False
+    initiatorOoB = None
+    initiatorMiTm = None
     initiatorMinKeySize = 16
     initiatorInputOutputCapability = None
 
     #Responder (BLE Pairing response)
     responderSecureConnections = False
-    responderOoB = False
-    responderMiTm = False
+    responderOoB = None
+    responderMiTm = None
     responderMinKeySize = 16
     responderInputOutputCapability = None
 
@@ -24,30 +24,30 @@ class smTest(scenario.Scenario):
     pairingMethod = None
 
     def printSummary(self):
-        print('begin List')
-        print('initiatorSecureConnections ' +
+        io.info('begin List')
+        io.info('initiatorSecureConnections ' +
               str(self.initiatorSecureConnections))
-        print('initiatorOoB ' + str(self.initiatorOoB))
-        print('initiatorMiTm ' + str(self.initiatorMiTm))
-        print('initiatorMinKeySize ' + str(self.initiatorMinKeySize))
-        print('initiatorInputOutputCapability ' +
+        io.info('initiatorOoB ' + str(self.initiatorOoB))
+        io.info('initiatorMiTm ' + str(self.initiatorMiTm))
+        io.info('initiatorMinKeySize ' + str(self.initiatorMinKeySize))
+        io.info('initiatorInputOutputCapability ' +
               str(self.initiatorInputOutputCapability))
-        print('responderSecureConnections ' +
+        io.info('responderSecureConnections ' +
               str(self.responderSecureConnections))
-        print('responderOoB ' + str(self.responderOoB))
-        print('responderMiTm ' + str(self.responderMiTm))
-        print('responderMinKeySize ' + str(self.responderMinKeySize))
-        print('responderInputOutputCapability ' +
+        io.info('responderOoB ' + str(self.responderOoB))
+        io.info('responderMiTm ' + str(self.responderMiTm))
+        io.info('responderMinKeySize ' + str(self.responderMinKeySize))
+        io.info('responderInputOutputCapability ' +
               str(self.responderInputOutputCapability))
-        print('secureConnections ' + str(self.secureConnections))
-        print('useOoB ' + str(self.useOoB))
-        print('pairing Method ' + str(self.pairingMethod))
+        io.info('secureConnections ' + str(self.secureConnections))
+        io.info('useOoB ' + str(self.useOoB))
+        io.info('pairing Method ' + str(self.pairingMethod))
 
     def pairingMethodSelection(self):
         self.secureConnections = self.responderSecureConnections and self.initiatorSecureConnections
         if self.secureConnections:
             io.info("Both devices supports LE secure connections")
-            self.useOOB = self.initiatorOoB and self.responderOoB
+            self.useOoB = self.initiatorOoB and self.responderOoB
             ioCapabilities = self.responderMiTm or self.initiatorMiTm
             self.justWorks = not self.responderMiTm and not self.initiatorMiTm
 
@@ -55,13 +55,13 @@ class smTest(scenario.Scenario):
             io.info(
                 "At least one of the devices doesn't support LE secure connections"
             )
-            self.useOOB = self.initiatorOoB or self.responderOoB
+            self.useOoB = self.initiatorOoB or self.responderOoB
             #TODO : Put back
             ioCapabilities = False
             justWorks = not self.responderMiTm and not self.initiatorMiTm
 
         io.chart(["Out Of Bond", "IO Capabilities", "Just Works"], [[
-            "yes" if self.useOOB else "no", "yes" if ioCapabilities else "no",
+            "yes" if self.useOoB else "no", "yes" if ioCapabilities else "no",
             "yes" if justWorks else "no"
         ]])
 
@@ -103,37 +103,45 @@ class smTest(scenario.Scenario):
                 self.pairingMethod = "NumericComparison"
             else:
                 self.pairingMethod = "JustWorks"
-        elif self.useOOB:
+        elif self.useOoB:
             self.pairingMethod = "OutOfBond"
         else:
             self.pairingMethod = "JustWorks"
 
     def onStart(self):
-        print('Mitm Started')
+        io.info('Mitm Started')
 
     def onEnd(self):
-        print('Mitm Finished')
+        io.info('Mitm Finished')
 
     def onMasterPairingRequest(self, packet):
-        print('Pairing from master sent')
+        io.info('Pairing from master sent')
         # Check if master wants to use LeSecureConnections or Legacy
-        self.checkSecureConnection(packet)
+        checkSecureConnectionRuleOK = self.checkSecureConnection(packet)
         #Check OoB
-        self.checkOoB(packet)
+        checkOoBRuleOK =self.checkOoB(packet)
         # Check minKeySize
-        self.checkSizeRule(packet)
-        self.checkMiTMRule(packet)
+        checkSizeRuleOK = self.checkSizeRule(packet)
+        checkMitmRuleOK = self.checkMiTMRule(packet)
+        return checkSecureConnectionRuleOK and checkOoBRuleOK and checkSizeRuleOK and checkMitmRuleOK
 
     def onSlavePairingResponse(self, packet):
         # Check if master wants to use LeSecureConnections or Legacy
-        self.checkSecureConnection(packet, True)
+        checkSecureConnectionRuleOK = self.checkSecureConnection(packet, True)
         #Check OoB
-        self.checkOoB(packet, True)
+        checkOoBRuleOK =self.checkOoB(packet, True)
         # Check minKeySize
-        self.checkSizeRule(packet, True)
-        self.checkMiTMRule(packet, True)
+        checkSizeRuleOK = self.checkSizeRule(packet, True)
+        checkMitmRuleOK = self.checkMiTMRule(packet, True)
+        io.info('''
+        Check secure -> {0} 
+        Check OoB -> {1} 
+        Check Size -> {2} 
+        Check Mitm -> {3} 
+        '''.format(checkSecureConnectionRuleOK,checkOoBRuleOK,checkSizeRuleOK,checkMitmRuleOK))
         self.pairingMethodSelection()
         self.printSummary()
+        return checkSecureConnectionRuleOK and checkOoBRuleOK and checkSizeRuleOK and checkMitmRuleOK
 
     def checkSecureConnection(self, packet, responder=False):
         authPaquet = ble.AuthReqFlag(data=bytes([packet.authentication]))
@@ -141,19 +149,19 @@ class smTest(scenario.Scenario):
         if flag in authPaquet.content:
             ruleOK = False
             if not responder:
-                ruleOK = authPaquet.content[
-                    flag] == self.initiatorSecureConnections
+                ruleOK = self.initiatorSecureConnections in (authPaquet.content[flag], None)
                 self.initiatorSecureConnections = authPaquet.content[flag]
             else:
-                ruleOK = authPaquet.content[
-                    flag] == self.responderSecureConnections
+                ruleOK = self.responderSecureConnections in (authPaquet.content[flag], None)
                 self.responderSecureConnections = authPaquet.content[flag]
-            print('LE SecureConnection pairing {0}accepted'.format(
+            io.info('LE SecureConnection pairing {0}accepted'.format(
                 '' if ruleOK else 'not '))
             if not ruleOK:
                 return False
+            else:
+                return True
         else:
-            print('No {0} info on this packet... ending the scenario'.format(
+            io.info('No {0} info on this packet... ending the scenario'.format(
                 flag))
             return False
 
@@ -163,17 +171,19 @@ class smTest(scenario.Scenario):
         if flag in authPaquet.content:
             ruleOK = False
             if not responder:
-                ruleOK = authPaquet.content[flag] == self.initiatorMiTm
+                ruleOK = self.initiatorMiTm in (authPaquet.content[flag], None)
                 self.initiatorMiTm = authPaquet.content[flag]
             else:
-                ruleOK = authPaquet.content[flag] == self.responderMiTm
+                ruleOK = self.responderMiTm in (authPaquet.content[flag], None)
                 self.responderMiTm = authPaquet.content[flag]
-            print('Mitm protection is {0}activated'.format(
+            io.info('Mitm protection is {0}activated'.format(
                 '' if ruleOK else 'not '))
             if not ruleOK:
                 return False
+            else:
+                return True
         else:
-            print('No {0} info on this packet... ending the scenario'.format(
+            io.info('No {0} info on this packet... ending the scenario'.format(
                 flag))
             return False
 
@@ -182,17 +192,19 @@ class smTest(scenario.Scenario):
         if hasattr(packet, 'outOfBand'):
             ruleOK = False
             if not responder:
-                ruleOK = packet.outOfBand == self.initiatorOoB
+                ruleOK = self.initiatorOoB in (packet.outOfBand, None)
                 self.initiatorOoB = packet.outOfBand
             else:
-                ruleOK = packet.outOfBand == self.responderOoB
+                ruleOK = self.responderOoB in (packet.outOfBand, None)
                 self.responderOoB = packet.outOfBand
-            print('OoB pairing rule is {0}accepted'.format(
+            io.info('OoB pairing rule is {0}accepted'.format(
                 '' if ruleOK else 'not '))
             if not ruleOK:
                 return False
+            else:
+                return True
         else:
-            print('No outOfBand on this packet... ending the scenario')
+            io.info('No outOfBand on this packet... ending the scenario')
             return False
 
     def checkSizeRule(self, packet, responder=False):
@@ -204,11 +216,13 @@ class smTest(scenario.Scenario):
             else:
                 ruleOK = self.responderMinKeySize >= packet.maxKeySize
                 self.responderMinKeySize = packet.maxKeySize
-            print('maxKeySize pairing rule is {0}accepted'.format(
+            io.info('maxKeySize pairing rule is {0}accepted'.format(
                 '' if ruleOK else 'not '))
             if not ruleOK:
                 return False
+            else:
+                return True
         else:
-            print('No {0} on this packet... ending the scenario'.format(
+            io.info('No {0} on this packet... ending the scenario'.format(
                 'maxKeySize'))
             return False
