@@ -11,5 +11,5 @@ entity GATT type Service serviceType primary uuid 1801 endHandle 0x0006
 entity GATT type Service serviceType primary uuid 1800 endHandle 0x0005
 END GATT_FILTER
 GATT_MODIFIER
-ATT replace handle 0x000b 0x000b type 2a24 2a24 value 424b2d424c452d312e30 424b2d424c452d312e30 
+entity ATT replace handle 0x000b 0x000b type 2a24 2a24 value 424b2d424c452d312e30 424b2d424c452d312e30 
 END GATT_MODIFIER

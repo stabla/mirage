@@ -1,3 +1,0 @@
-command,handler
-BLEWriteCommand,onMasterWriteCommand
-BLEHandleValueNotification,onSlaveHandleValueNotification

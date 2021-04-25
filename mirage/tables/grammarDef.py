@@ -28,7 +28,7 @@ class ParameterAndValue(Namespace):
 
 class BleTableRule(List):
     mandatory = ParameterAndValue, ParameterAndValue, ParameterAndValue
-    grammar = mandatory, optional(ParameterAndValue), optional(ParameterAndValue), endl
+    grammar = mandatory, optional(ParameterAndValue), optional(ParameterAndValue),optional(endl), optional(ParameterAndValue(), endl
 
 
 class BleTableBlockRule(List):

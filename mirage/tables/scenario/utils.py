@@ -1,5 +1,6 @@
 import re
 import csv
+from pyparsing import Word, printables, LineEnd, Optional, OneOrMore
 
 GATT_FILTER_SECTION = 'GATT_FILTER'
 BLE_TABLES_SECTION = 'BLE_TABLES'
@@ -17,16 +18,41 @@ def applyRegexToText(text: str, regex: str):
 
 
 def groupByRuleType(rulesList: list):
-    dictionnary= {}
+    dictionnary = {}
     for rule in rulesList:
-        if rule.typeCommand not in dictionnary:
-            dictionnary[rule.typeCommand]= []
-        dictionnary[rule.typeCommand].append(rule)
-    mapHandlersToCommand(dictionnary)
+        if hasattr(rule, 'type') and rule.type not in dictionnary:
+            dictionnary[rule.type] = []
+        dictionnary[rule.type].append(rule)
+    for packetType in dictionnary :
+        dictionnary[packetTypeToRule(packetType)[1]]= dictionnary.pop(packetType)
     return dictionnary
 
 
-def mapHandlersToCommand(rulesGroupedByTypes: dict):
-    reader= csv.DictReader(open("/home/pi/mirage/mirage/tables/scenario/commandsToHandlers.csv", 'r'))
-    for line in reader:
-        rulesGroupedByTypes[line['handler']]= rulesGroupedByTypes.pop(line['command'])
+def list2Dict(valuesList):
+    dictionary = {}
+    for i in range(0, len(valuesList)-1, 2):
+        dictionary[valuesList[i]] = valuesList[i+1]
+    return dictionary
+
+
+def parsePacketAndGATTRules(rules):
+    grammar = OneOrMore(Word(printables) +
+                        Word(printables)+Optional(LineEnd()))
+    result = list(grammar.parseString(rules))
+    smallerLists = [l.split(',') for l in ','.join(result).split('\n')]
+    ruleValueDictList = []
+    if [''] in smallerLists:
+        smallerLists.remove([''])
+    for rule in smallerLists:
+        rule.remove('')
+        ruleValueDictList.append(list2Dict(rule))
+    return ruleValueDictList
+
+def packetTypeToRule(packet):
+    switcher = {
+        'BLEWriteCommand': ('BLEHandleValueRule', 'onMasterWriteCommand'),
+        'BLEHandleValueNotification': ('BLEHandleValueRule', 'onSlaveHandleValueNotification'),
+        'BLEPairingRequest': ('BLEPairingRule', 'onMasterPairingRequest'),
+        'BLEPairingResponse': ('BLEPairingRule', 'onSlavePairingResponse')
+    }
+    return switcher.get(packet, None)
