@@ -1,6 +1,5 @@
 from mirage.core import scenario, interpreter, module
 from mirage.libs import io, ble, bt, utils
-from mirage.libs.ble_utils.firewall import *
 import configparser,os.path,subprocess
 
 class mitm_test(scenario.Scenario):
@@ -173,23 +172,10 @@ class mitm_test(scenario.Scenario):
         self.a2sReceiver = self.module.a2sReceiver
         self.a2mEmitter = self.module.a2mEmitter
         self.a2mReceiver = self.module.a2mReceiver
-        self.firewallManager = FirewallEventManager()
-        self.dependencies = ["ble_discover"] # for GATT
         io.info("MITM started !")
 
-       # Load module
-        self.m = utils.loadModule('ble_discover')
-        self.m['INTERFACE'] = self.args['INTERFACE1']
-        self.m["START_HANDLE"] = "0x0001"
-        self.m["END_HANDLE"] = "0xFFFF"
-        self.m["FILTER_BY"] = ""
-        self.m["FILTER"] = ""
-
-        return True
-    
     def onEnd(self):
         io.info("MITM finished")
-        return True
 
     {% for handler in properRules %}
     def {{handler}}(self,packet):{%if handler in ['onMasterWriteCommand','onSlaveHandleValueNotification'] %}
@@ -231,129 +217,3 @@ class mitm_test(scenario.Scenario):
 
     def getEventName(self, handle: hex, value: hex, handlerName: str):
         return "{0}_{1}_{2} ".format(str(handle),str(value),handlerName)
-
-    """
-        MIDDLE FILTERING GATT SERVER 
-    """
-    # When receiving a packet for GATT
-    def onMasterReadByGroupTypeRequest(self, packet):
-        io.info("Read By Group Type Request (from Master): startHandle = "+hex(packet.startHandle)+
-                " / endHandle = "+hex(packet.endHandle)+" / uuid = "+hex(packet.uuid))
-        io.info("Response from MITM ReadGroup ...")
-        (success,response) = self.server.readByGroupType(packet.startHandle, packet.endHandle, packet.uuid)
-        if success:
-            io.displayPacket(ble.BLEReadByGroupTypeResponse(attributes=response))
-            self.a2mEmitter.sendp(ble.BLEReadByGroupTypeResponse(attributes=response))
-        else:
-            self.a2mEmitter.sendp(ble.BLEErrorResponse(request=0x10,ecode=response,handle=packet.startHandle))
-        return False
-
-    # When receiving a packet for ATT
-    def onMasterReadByTypeRequest(self, packet):
-        io.info("Read By Type Request : startHandle = "+hex(packet.startHandle)+
-            " / endHandle = "+hex(packet.endHandle)+" / uuid = "+hex(packet.uuid))
-        io.info("Response from MITM ReadType ...")
-        (success,response) = self.server.readByType(packet.startHandle,packet.endHandle,packet.uuid)
-        if (response == []):
-            io.warning(" MITM: Empty Response ! Try again ... ")
-            self.a2mEmitter.sendp(ble.BLEErrorResponse(request=0x08,ecode=0, handle=packet.startHandle))
-        else:
-            if success:
-                io.displayPacket(ble.BLEReadByTypeResponse(attributes=response))
-                self.a2mEmitter.sendp(ble.BLEReadByTypeResponse(attributes=response))
-            else:
-                self.a2mEmitter.sendp(ble.BLEErrorResponse(request=0x08,ecode=response, handle=packet.startHandle))
-        return False
-
-    # NOT USED
-    # When receiving a request FindInfo
-    #
-    def onMasterFindInformationRequest(self,packet):
-        io.info("Find Information Request : startHandle = "+hex(packet.startHandle)+
-            " / endHandle = "+hex(packet.endHandle))
-        io.info("Response from MITM FindInfo ...")
-        (success,response) = self.server.findInformation(packet.startHandle,packet.endHandle)
-        if success:
-            io.displayPacket(ble.BLEFindInformationResponse(attributes=response))
-            self.a2mEmitter.sendp(ble.BLEFindInformationResponse(attributes=response))
-        else:
-            self.a2mEmitter.sendp(ble.BLEErrorResponse(request=0x04,ecode=response,handle=packet.startHandle))
-        return False
-
-    def onSlaveConnect(self, initiatorType="public"):
-        # Entering the GATT Entering Cloning mode
-        while (self.a2sEmitter.getMode() != "NORMAL"):
-            utils.wait(seconds=1)
-            print(self.a2sEmitter.getMode())
-            
-        # Verify the connection type
-        address = utils.addressArg(self.args["TARGET"])
-        connectionType = self.args["CONNECTION_TYPE"]
-        self.responderAddress = address
-        self.responderAddressType = (b"\x00" if self.args["CONNECTION_TYPE"] == "public" else b"\x01")
-
-        # Connecting to Slave
-        io.info("MITM: Connecting to slave "+address+"...")
-        self.a2sEmitter.sendp(ble.BLEConnect(dstAddr=address, type=connectionType, initiatorType=initiatorType))
-
-        # Wait until connection
-        while not self.a2sEmitter.isConnected(): utils.wait(seconds=0.5)
-
-        # When connected, clone the GATT Server
-        if self.a2sEmitter.isConnected():
-            io.success("Connected on slave : "+self.a2sReceiver.getCurrentConnection())
-            # Cloning the ATT
-            io.info("MITM: Cloning Slave's ATT Server ...")
-            self.__getAttSlave("ATT_SLAVE_MITM")
-            # Cloning the GATT
-            io.info("MITM: Cloning GATT Server ... ")
-            self.__getGattSlave("GATT_SLAVE_MITM")
-            io.success("MITM: Cloning has been finished ... ")
-            # Starting the server
-            io.info("MITM: GATT/ATT starting server ...")
-            self.__setGattServer("GATT_SLAVE_MITM", "ATT_SLAVE_MITM")
-            io.success("MITM: GATT/ATT server running ... ")
-        else:
-            io.fail("MITM: No active connections !") 
-        return False
-
-    # Check if file exists 
-    def __fileExists(self,filename):
-        return os.path.isfile(filename)
-
-    # Initialize GATT Server
-    def __setGattServer(self, GATT_SLAVE_FILE, ATT_SLAVE_FILE):
-        # Init server
-        self.server = ble.GATT_Server()
-        # Create GattServer object
-        firewallGattServer = Firewall_GattServer()
-        # InitParsing
-        io.info("MITM: Parsing of rules ...")
-        (characteristicRules,serviceRules,descriptorRules,attributeRules,gatt_modifier_rules) = checkRules('{{fileToParse}}')
-        io.info("MITM: Starting MITM ATT / GATT ... ")
-        if GATT_SLAVE_FILE != "" and self.__fileExists(GATT_SLAVE_FILE):
-            io.info("MITM: Importing GATT_SLAVE structure")
-            firewallGattServer.importGATT(filename=GATT_SLAVE_FILE,forbiddenServices=serviceRules,forbiddenCharacteristics=characteristicRules,forbiddenDescriptors=descriptorRules,server=self.server)
-            print('finishing import GATT')
-        else:
-            io.info("MITM: No filename provided : empty database !")
-
-    # Export Slave's ATT Server
-    def __getAttSlave(self, ATT_SLAVE_FILE):
-        # Set attributes
-        self.m["WHAT"] = "attributes"
-        self.m['ATT_FILE']=ATT_SLAVE_FILE
-        # Empty file before filling
-        open(self.m['ATT_FILE'], 'w').close()
-        # Execute to fill ATT_FILE
-        self.m.execute()
-
-    # Export Slave's GATT
-    def __getGattSlave(self, GATT_SLAVE_FILE):
-        # Set attributes
-        self.m["WHAT"] = "all"
-        self.m['GATT_FILE']=GATT_SLAVE_FILE
-        # Empty file before filling
-        open(self.m['GATT_FILE'], 'w').close()
-        # Execute to fill GATT_FILE
-        self.m.execute()

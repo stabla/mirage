@@ -1,26 +1,265 @@
+import copy,struct
+
+class BLEPacket():
+    '''
+        Mirage Bluetooth Low Energy Packet
+        '''
+
+    def __init__(self):
+        super().__init__()
+        self.name = "BLE - Unknown Packet"
+
+
+class BLEReadByTypeResponse(BLEPacket):
+    def __init__(self,  data=b"", attributes=[], connectionHandle=-1):
+        super().__init__()
+        self.data = data
+        self.attributes = attributes
+        self.connectionHandle = connectionHandle
+        if self.attributes == [] and self.data != b"":
+            self.decode()
+        else:
+            self.build()
+        self.name = "BLE - Read By Type Response"
+
+    def build(self):
+        self.data = b""
+        for att in self.attributes:
+            handle = struct.pack(">H", att["attributeHandle"])[::-1]
+            value = att["value"]
+            length = struct.pack("B", len(handle+value))
+            self.data += handle + value
+        self.data = length + self.data
+
+    def decode(self):
+        data = self.data
+        pairs = []
+        length = data[0]
+        sizeOfValue = length - 2
+        pointer = 0
+        rawData = data[1:]
+        while pointer < len(rawData):
+            attributeHandle = struct.unpack(
+                ">H", rawData[pointer:pointer+2][::-1])[0]
+            value = rawData[pointer+2:pointer+2+sizeOfValue]
+            pairs.append({"attributeHandle": attributeHandle, "value": value})
+            pointer += length
+        self.attributes = pairs
+
+    def toString(self):
+        return "<< "+self.name+" | data="+self.data.hex()+" >>"
+
+class BLEReadByGroupTypeResponse(BLEPacket):
+	def __init__(self, length = 6, data = b"", attributes = [], connectionHandle = -1):
+		super().__init__()
+		self.length = length
+		self.data = data
+		self.attributes = attributes
+		if self.attributes == [] and self.data != b"":
+			self.decode()
+		else:
+			self.build()
+		self.connectionHandle = connectionHandle
+		self.name = "BLE - Read By Group Type Response Packet"
+
+	def build(self):
+		self.data = b""
+		for att in self.attributes:
+			attHandle = struct.pack('>H',att["attributeHandle"])[::-1]
+			endHandle = struct.pack('>H',att["endGroupHandle"])[::-1]
+			value = att["value"]
+			length = len(attHandle+endHandle+value)
+			self.data += attHandle+endHandle+value
+		
+		self.length = length
+
+	def decode(self):
+		data = self.data
+		length = self.length
+		pairs = []
+		sizeOfValue = length - 4
+		pointer = 0
+		while pointer < len(data):
+			attributeHandle = struct.unpack('>H',data[pointer:pointer+2][::-1])[0]
+			endGroupHandle = struct.unpack('>H',data[pointer+2:pointer+4][::-1])[0]
+			value = data[pointer+4:pointer+4+sizeOfValue]
+			pairs.append({"attributeHandle":attributeHandle, "endGroupHandle":endGroupHandle, "value":value})
+			pointer += length
+		self.attributes = pairs
+
+	def toString(self):
+		return "<< "+self.name+" | length="+str(self.length)+" | data="+self.data.hex()+" >>"
+
+
+class Dissector:
+	'''
+	This class defines a dissector : it allows to easily convert a complex data structure to the corresponding raw bytes, or the raw bytes to the corresponding data structure. 
+	Every dissector must inherits from this class in order to provide the same API.
+
+	A data structure is described as a dictionary, composed of one (or more) field(s) and stored in the ``content`` attribute. Every key of this dictionary can be manipulated as a standard attribute.
+	The corresponding data is stored in the ``data`` attribute as a list of raw bytes.
+
+	Two main methods have to be implemented :
+
+	  * **build** : this method converts the data structure to the corresponding raw bytes
+	  * **dissect** : this method converts the raw bytes to the corresponding data structure
+	'''
+	def __init__(self,data=b"",length=-1,content={},*args, **kwargs):
+		self.data = data
+		if len(args)==1 and data==b"":
+			self.data = args[0]
+			
+		self.length = length if length!=-1 else len(self.data)
+
+		self.content = copy.copy(content)
+
+		if self.data != b"":
+			self.dissect()
+		else:
+			for k,v in kwargs.items():
+				self.content[k] = v
+		self.build()
+
+	def dissect(self):
+		'''
+		This method converts the data structure to the corresponding raw bytes.
+
+		:Example:
+			
+			>>> dissector.dissect()
+
+		'''
+
+		self.content = {}
+
+	def __getattr__(self, name):
+		if name in self.content:
+			return self.content[name]
+		else:
+			return None
+
+	def __setattribute__(self,name,value):
+		self.content[name] = value
+		self.build()
+
+	def __repr__(self):
+		return self.__str__()
+
+	def __eq__(self,other):
+		return self.data == other.data or self.content == other.content
+
+	def build(self):
+		'''
+		This method converts the raw bytes to the corresponding data structure.
+
+		:Example:
+			
+			>>> dissector.build()
+
+		'''
+
+		self.data = b""
+		self.length = -1
+
+class UUID(Dissector):
+	def _correct128(self):
+		if "UUID128" in self.content and len(self.content["UUID128"]) == 32:
+			self.content["UUID128"] = self.content["UUID128"].replace(b"-",b"").hex()
+
+	def dissect(self):
+
+		if self.length == 2:
+			uuid16 = struct.unpack('>H',self.data)[0]
+			uuid128 = b"\x00\x00" + self.data + b"\x00\x00\x10\x00\x80\x00\x00\x80\x5F\x9B\x34\xFB"
+			name = AssignedNumbers.getNameByNumber(uuid16)
+			self.content={"UUID16":uuid16,"UUID128":uuid128,"name":name}
+		else:
+			uuid = self.data[0:16]
+			self.content={"UUID128":uuid}
+
+
+	def build(self):
+		if "UUID16" in self.content:
+			self.content['name'] =  AssignedNumbers.getNameByNumber(self.content['UUID16'])			
+			self.data = struct.pack('>H',self.content['UUID16'])
+			self.content["UUID128"] = b"\x00\x00" + self.data + b"\x00\x00\x10\x00\x80\x00\x00\x80\x5F\x9B\x34\xFB"
+		elif "UUID128" in self.content:
+			self._correct128()
+
+			if b"\x00\x00\x10\x00\x80\x00\x00\x80\x5f\x9b\x34\xfb" in self.content["UUID128"]:
+				self.content["UUID16"] = struct.unpack('>H',self.content["UUID128"][2:4])[0]
+				self.data = self.content['UUID16'] if "UUID16" in self.content else self.content['UUID128']
+		elif "name" in self.content:
+			self.content["UUID16"] = AssignedNumbers.getNumberByName(self.content['name'])
+			self.data = struct.pack('>H',self.content['UUID16'])
+			self.content["UUID128"] = b"\x00\x00" + self.data + b"\x00\x00\x10\x00\x80\x00\x00\x80\x5F\x9B\x34\xFB"
+
+	def _str128(self,uuid128):
+		return uuid128[0:4].hex()+"-"+uuid128[4:6].hex()+"-"+uuid128[6:8].hex()+"-"+uuid128[8:10].hex()+"-"+uuid128[10:16].hex()
+
+	def __str__(self):
+		string = "UUID(128bits:"+self._str128(self.content['UUID128'])
+		if "UUID16" in self.content:
+			string += ", 16bits:"+hex(self.content['UUID16'])
+		if "name" in self.content and self.content['name'] is not None:
+			string += ", name:"+self.content['name']
+		string += " )"
+		return string
+
 def _int2bin(s):
     b = str(s) if s<=1 else bin(s>>1)[2:] + str(s&1)
     return (8-len(b))*"0"+b
+
+class CharacteristicDeclaration(Dissector):
+    def dissect(self):
+        if self.length == 5:
+            uuid = UUID(data=self.data[0:2])
+            valueHandle = struct.unpack('>H',self.data[2:4])[0]
+            permissionsFlag = PermissionsFlag(data=self.data[4:5])
+        elif self.length == 19:
+            uuid = UUID(data=self.data[0:16])
+            valueHandle = struct.unpack('>H',self.data[16:18])[0]
+            permissionsFlag = PermissionsFlag(data=self.data[18:19])
+        self.content = {"UUID":uuid,"valueHandle":valueHandle,"permissionsFlag":permissionsFlag}
+
+    def build(self):
+        self.content["UUID"].build()
+        valueHandleData = struct.pack('>H',self.content["valueHandle"])
+        self.content["permissionsFlag"].build()
+        self.data = self.content["UUID"].data+valueHandleData+self.content["permissionsFlag"].data
+
+    def __str__(self):
+        return "Characteristic Declaration( UUID="+str(self.content["UUID"])+" , valueHandle="+hex(self.content["valueHandle"])+" , permissionsFlag="+str(self.content['permissionsFlag'])+")"
+
+
+class PermissionsFlag(Dissector):
+	def dissect(self):
+		self.content = {"permissions":AssignedNumbers.getPermissionsByNumber(struct.unpack('B',self.data)[0])}
+
+	def build(self):
+		self.data = struct.pack('B',AssignedNumbers.getNumberByPermissions(self.content["permissions"]))
+		self.length = len(self.data)
+
+
+	def __contains__(self, key):
+		return key in self.content["permissions"]
+
+	def __iter__(self) :
+		return self.content["permissions"].__iter__()
+
+	def __next__(self) :
+		return self.content["permissions"].__next__()
+
+	def __str__(self):
+		sortie = ""
+		for i in self.content["permissions"]:
+			sortie += ("" if sortie == "" else ",") + i
+		return "Flag("+sortie+")"
+
 class AssignedNumbers:
-	'''
-	This class provides some helpers to get some specific values used by the Bluetooth and Bluetooth Low Energy protocols.
-	'''
+
 	@classmethod
 	def getStringsbyFlags(cls,flags):
-		'''
-		This class method converts some flags contained in BLE Advertisements into a list of human readable strings.
-		
-		:param flags: flags to convert, separated by "+"
-		:type flags: str
-		:return: list of human readable strings
-		:rtype: list of str
-
-		:Example:
-
-			>>> AssignedNumbers.getStringsbyFlags("limited_disc_mode+simul_le_br_edr_host")
-			['LE Limited Discoverable Mode', 'Simultaneous LE and BR/EDR, Host']
-		
-		'''
 		return [ADV_FLAGS[flag] for flag in str(flags).split('+')]
 
 	@classmethod
@@ -2944,4 +3183,15 @@ COMPANY_ID = {
     "1588": "Fanstel Corp",
     "1589": "Crookwood"
 }
+class Service(Dissector):
+    
+	def dissect(self):
+		uuid = UUID(data=self.data)
+		self.content = {"UUID":uuid}
 
+	def build(self):
+		self.content['UUID'].build()
+		self.data = self.content['UUID'].data
+
+	def __str__(self):
+		return "Service( UUID="+str(self.content["UUID"])+" )"

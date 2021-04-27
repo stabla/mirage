@@ -1,6 +1,5 @@
 from mirage.core import scenario, interpreter, module
 from mirage.libs import io, ble, bt, utils
-from mirage.libs.ble_utils.firewall import *
 import configparser,os.path,subprocess
 
 class mitm_test(scenario.Scenario):
@@ -173,23 +172,10 @@ class mitm_test(scenario.Scenario):
         self.a2sReceiver = self.module.a2sReceiver
         self.a2mEmitter = self.module.a2mEmitter
         self.a2mReceiver = self.module.a2mReceiver
-        self.firewallManager = FirewallEventManager()
-        self.dependencies = ["ble_discover"] # for GATT
         io.info("MITM started !")
 
-       # Load module
-        self.m = utils.loadModule('ble_discover')
-        self.m['INTERFACE'] = self.args['INTERFACE1']
-        self.m["START_HANDLE"] = "0x0001"
-        self.m["END_HANDLE"] = "0xFFFF"
-        self.m["FILTER_BY"] = ""
-        self.m["FILTER"] = ""
-
-        return True
-    
     def onEnd(self):
         io.info("MITM finished")
-        return True
 
     
     def onMasterWriteCommand(self,packet):

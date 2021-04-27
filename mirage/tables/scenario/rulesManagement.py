@@ -1,12 +1,12 @@
-import grammarDef as bleTableGrammar
 from collections import namedtuple
 from utils import *
 
 GATT_FILTER_SECTION = 'GATT_FILTER'
 BLE_TABLES_SECTION = 'BLE_TABLES'
 GATT_MODIFIER_SECTION = 'GATT_MODIFIER'
-SECTIONS = {GATT_FILTER_SECTION: r'GATT_FILTER(.*?)END', BLE_TABLES_SECTION: r'BLE_TABLES(.*?)END',
-            GATT_MODIFIER_SECTION: r'GATT_MODIFIER(.*?)END'}
+SECTIONS = {
+    GATT_FILTER_SECTION: r'GATT_FILTER(.*?)END', BLE_TABLES_SECTION: r'BLE_TABLES(.*?)END'}
+
 
 class BleTable:
     def __init__(self, target: str = '', default: str = '', rules: list = []):
@@ -44,22 +44,25 @@ def parseFile(pathOfFile: str):
                 # Apply it's grammar to get consistent informations
                 parsedText[section] = parsePacketAndGATTRules(
                     sectionsAndText[section])
-            elif section == GATT_MODIFIER_SECTION:
-                # Apply it's grammar to get consistent information
-                parsedText[section] = bleTableGrammar.parse(
-                    sectionsAndText[section], bleTableGrammar.gattModifierSection)
             else:
                 raise Exception('Error During Parsing')
     return parsedText
 
 # With parsed text extract rule to put it on object instancied with introspection
-def getBleTableRule(parsedRule):
-    return namedtuple('BLETableRule', parsedRule.keys())(*parsedRule.values())
+
+
+def getBleTableRule(parsedRule, className):
+    return namedtuple(className, parsedRule.keys())(*parsedRule.values())
 
 # Get a BleTable object by extracting target, rules and default action
-def getBleTable(bleTable: bleTableGrammar.BleTableSection):
+def getBleTable(bleTable):
     target = bleTable[0]['TARGET']
     default = bleTable[len(bleTable)-1]['default']
     attributesTocheck = bleTable[1:len(bleTable)-1]
-    rules = list(map(getBleTableRule, attributesTocheck))
+    rules = [getBleTableRule(attribute, 'BLETableRule')
+             for attribute in attributesTocheck]
     return BleTable(target, default, rules)
+
+
+def getGattFilterTable(gattFilterSection):
+    return [getBleTableRule(attribute, 'GATTFilterRule') for attribute in gattFilterSection]
