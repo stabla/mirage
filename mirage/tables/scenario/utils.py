@@ -19,13 +19,14 @@ def applyRegexToText(text: str, regex: str):
 
 def groupByRuleType(rulesList: list):
     dictionnary = {}
+    newDictionnary={}
     for rule in rulesList:
         if hasattr(rule, 'type') and rule.type not in dictionnary:
             dictionnary[rule.type] = []
         dictionnary[rule.type].append(rule)
     for packetType in dictionnary :
-        dictionnary[packetTypeToRule(packetType)[1]]= dictionnary.pop(packetType)
-    return dictionnary
+        newDictionnary[packetTypeToRule(packetType)[1]]= dictionnary[packetType]
+    return newDictionnary
 
 
 def list2Dict(valuesList):
