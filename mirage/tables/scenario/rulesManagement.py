@@ -53,7 +53,7 @@ def parseFile(pathOfFile: str):
 
 def getBleTableRule(parsedRule, className):
     return namedtuple(className, parsedRule.keys())(*parsedRule.values())
-
+    
 # Get a BleTable object by extracting target, rules and default action
 def getBleTable(bleTable):
     target = bleTable[0]['TARGET']

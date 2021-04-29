@@ -1,5 +1,6 @@
 from mirage.core import scenario, interpreter, module
 from mirage.libs import io, ble, bt, utils
+from mirage.libs.ble_utils.firewall import *
 import configparser,os.path,subprocess
 
 class mitm_test(scenario.Scenario):
@@ -172,6 +173,7 @@ class mitm_test(scenario.Scenario):
         self.a2sReceiver = self.module.a2sReceiver
         self.a2mEmitter = self.module.a2mEmitter
         self.a2mReceiver = self.module.a2mReceiver
+        self.firewallManager = FirewallEventManager()
         io.info("MITM started !")
 
     def onEnd(self):
@@ -187,7 +189,7 @@ class mitm_test(scenario.Scenario):
         sinceLastEventDuration = self.firewallManager.durationSinceLastPacket(currentEvent){% for rule in properRules[handler] %}
         if packet.handle == {{rule.handle}} and {{rule.value}} in packet.value:
             #Increment counter of one packet and update timestamp of last packet that comes
-            self.firewallManager.countEvent(currentEvent){% if rule.number|int > 0 and rule.action == False  %}
+            self.firewallManager.countEvent(currentEvent){% if rule.number|int > 0 and rule.action == 'deny'  %}
             #Check if flow of packets is allowed or not
             if self.firewallManager.getCurrentCount(currentEvent) >= {{rule.number}} and sinceLastEventDuration < WINDOW_SIZE_IN_SECONDS:
                 return self.__drop(currentEvent)
