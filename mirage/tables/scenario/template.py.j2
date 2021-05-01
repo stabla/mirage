@@ -187,12 +187,12 @@ class mitm_test(scenario.Scenario):
         self.firewallManager.initCounters(currentEvent)
         #Computes duration in seconds where last time where packet comes, 0 is default value
         sinceLastEventDuration = self.firewallManager.durationSinceLastPacket(currentEvent){% for rule in properRules[handler] %}
-        if packet.handle == {{rule.handle}} and {{rule.value}} in packet.value:
+        if packet.handle == {{rule.handle}} and str({{rule.value}}) in str(packet.value):
             #Increment counter of one packet and update timestamp of last packet that comes
             self.firewallManager.countEvent(currentEvent){% if rule.number|int > 0 and rule.action == 'deny'  %}
             #Check if flow of packets is allowed or not
             if self.firewallManager.getCurrentCount(currentEvent) >= {{rule.number}} and sinceLastEventDuration < WINDOW_SIZE_IN_SECONDS:
-                return self.__drop(currentEvent)
+                return self.__drop(currentEvent,packet)
             elif sinceLastEventDuration > WINDOW_SIZE_IN_SECONDS: # After a certain time counters go down
                 self.firewallManager.resetCounters(currentEvent)
             else: # number of packet flows is inferior of limit during window
@@ -200,7 +200,7 @@ class mitm_test(scenario.Scenario):
             # packet is allowed
             return True
         else : #default case of the rule
-            return {{'self.__drop(currentEvent)' if not BleTable.default else True}} {% endif %}{% endfor %}{%elif handler in ['onMasterPairingRequest','onSlavePairingResponse']%}
+            return {{'self.__drop(currentEvent,packet)' if not BleTable.default else True}} {% endif %}{% endfor %}{%elif handler in ['onMasterPairingRequest','onSlavePairingResponse']%}
         # Check if we accept use LeSecureConnections or Legacy {% set parameter = 'packet' if handler == 'onMasterPairingRequest' else 'packet, True' %}
         checkSecureConnectionRuleOK =  self.checkSecureConnection({{parameter}})
         #Check OoB
@@ -212,8 +212,9 @@ class mitm_test(scenario.Scenario):
         {% endif %}
 {% endfor %}
     # Drop packets and reset counter of packets after drops
-    def __drop(self, name: str):
-        io.info("According to our firewall policy we choose to drop the packet")
+    def __drop(self, name: str,packet):
+        io.info("According to our firewall policy we choose to drop the following packet")
+        io.info(packet)
         self.firewallManager.resetCounters(name)
         return False
 
