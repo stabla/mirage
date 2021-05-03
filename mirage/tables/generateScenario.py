@@ -16,4 +16,4 @@ parsedFile = rm.parseFile(sys.argv[2])
 if (rm.PACKET_FILTER_SECTION in parsedFile):
     ble_tables_rule = rm.getPacketFilterRulesForTemplate(parsedFile[rm.PACKET_FILTER_SECTION])
 generateScenario(ble_tables_rule)
-#print(ble_tables_rule.target)
+print(ble_tables_rule.target)

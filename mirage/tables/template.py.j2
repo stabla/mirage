@@ -177,7 +177,7 @@ class mitm_test(scenario.Scenario):
     def onEnd(self):
         io.info("MITM finished")
     
-    def compareCorrectValue(packetType,value):
+    def compareCorrectValue(self,packetType,value):
         if packetType == bytes:
             return bytes.fromhex(value)
         elif packetType == int:
@@ -187,15 +187,16 @@ class mitm_test(scenario.Scenario):
 
     {% for handler in properRules %}
     def {{handler}}(self,packet):{%if handler in ['onMasterWriteCommand','onSlaveHandleValueNotification','onMasterWriteRequest'] %}
-        packetType = type(packet.value){% for rule in properRules[handler] %}
+        packetType = type(packet.value)
+        {% for rule in properRules[handler] %}
         valueInFile = self.compareCorrectValue(packetType,'{{rule.value}}')
         if packet.handle == {{rule.handle}} and valueInFile in packet.value :{% if rule.action == 'deny' %}
             #Deny packet
-            return self.__drop(currentEvent,packet){% else %}
+            return self.__drop(packet){% else %}
             # packet is allowed
             return True {% endif %}{% endfor %}
         else : #default case of the rule
-            return {{'self.__drop(currentEvent,packet)' if not default else True}}{%elif handler in ['onMasterPairingRequest','onSlavePairingResponse']%}
+            return {{'self.__drop(packet)' if not default else True}}{%elif handler in ['onMasterPairingRequest','onSlavePairingResponse']%}
         # Check if we accept use LeSecureConnections or Legacy {% set parameter = 'packet' if handler == 'onMasterPairingRequest' else 'packet, True' %}
         checkSecureConnectionRuleOK =  self.checkSecureConnection({{parameter}})
         #Check OoB
@@ -210,10 +211,7 @@ class mitm_test(scenario.Scenario):
         {% endif %}
 {% endfor %}
     # Drop packets and reset counter of packets after drops
-    def __drop(self, name: str,packet):
+    def __drop(self,packet):
         io.info("According to our firewall policy we choose to drop the following packet")
-        io.info(packet)
+        io.info(str(packet))
         return False
-
-    def getEventName(self, handle: hex, value: hex, handlerName: str):
-        return "{0}_{1}_{2} ".format(str(handle),str(value),handlerName)
