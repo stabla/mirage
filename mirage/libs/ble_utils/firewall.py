@@ -45,10 +45,9 @@ class FirewallEventManager:
 class GATTEventManager:
 
     characteristicPackets = []
-
+    # Filtering Characteristics
     def defineCharacteristic(self, information):
-        characteristicDeclaration = CharacteristicDeclaration(
-            data=information['value'][::-1])
+        characteristicDeclaration = CharacteristicDeclaration(data=information['value'][::-1])
         characteristic = {
             "declarationHandle": information["attributeHandle"],
             "valueHandle": characteristicDeclaration.valueHandle,

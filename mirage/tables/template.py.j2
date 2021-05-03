@@ -1,12 +1,11 @@
 from mirage.core import scenario, interpreter, module
 from mirage.libs import io, ble, bt, utils
-from mirage.libs.ble_utils.firewall import *
-import configparser,os.path,subprocess
 
 class mitm_test(scenario.Scenario):
     {%set pairingHandlers = []%}{%if ('onMasterPairingRequest' or 'onSlavePairingResponse') in properRules %}{%if 'onMasterPairingRequest' in properRules  %}
     {% set _ = pairingHandlers.append('onMasterPairingRequest') %}{% endif %}{%if 'onSlavePairingResponse' in properRules  %}{% set _ = pairingHandlers.append('onSlavePairingResponse') %}{% endif %}{% for handler in pairingHandlers  %} {%set applicableRule = properRules[handler][0] %}{%set permission = True if applicableRule.action =='allow' else False %}
-    {{'initiator' if handler == 'onMasterPairingRequest' else 'responder' }}SecureConnections = {{permission if applicableRule.mode and applicableRule.mode == 'LESecurePairing' else None}}
+    toAllow = {{permission}}
+    {{'initiator' if handler == 'onMasterPairingRequest' else 'responder' }}SecureConnections = {{permission if applicableRule.mode and (applicableRule.mode == 'LELegacyPairing')   else None}}
     {{'initiator' if handler == 'onMasterPairingRequest' in properRules else 'responder' }}OoB = {{permission if applicableRule.method and applicableRule.method  == 'oob' else None}}
     {{'initiator' if handler == 'onMasterPairingRequest' in properRules else 'responder' }}MiTm = None
     {{'initiator' if handler == 'onMasterPairingRequest' in properRules else 'responder' }}MinKeySize =  {{ applicableRule.minKeySize if applicableRule.minKeySize and applicableRule.minKeySize | int > 1 else 16 }}
@@ -173,34 +172,30 @@ class mitm_test(scenario.Scenario):
         self.a2sReceiver = self.module.a2sReceiver
         self.a2mEmitter = self.module.a2mEmitter
         self.a2mReceiver = self.module.a2mReceiver
-        self.firewallManager = FirewallEventManager()
         io.info("MITM started !")
 
     def onEnd(self):
         io.info("MITM finished")
+    
+    def compareCorrectValue(packetType,value):
+        if packetType == bytes:
+            return bytes.fromhex(value)
+        elif packetType == int:
+            return int(value)
+        else:
+            return value
 
     {% for handler in properRules %}
-    def {{handler}}(self,packet):{%if handler in ['onMasterWriteCommand','onSlaveHandleValueNotification'] %}
-        #Defines what apprend exactly
-        currentEvent = self.getEventName(packet.handle, packet.value, self.{{handler}}.__name__)
-        #Init counter of the number of packets if it's the first time that packet is handled 
-        self.firewallManager.initCounters(currentEvent)
-        #Computes duration in seconds where last time where packet comes, 0 is default value
-        sinceLastEventDuration = self.firewallManager.durationSinceLastPacket(currentEvent){% for rule in properRules[handler] %}
-        if packet.handle == {{rule.handle}} and str({{rule.value}}) in str(packet.value):
-            #Increment counter of one packet and update timestamp of last packet that comes
-            self.firewallManager.countEvent(currentEvent){% if rule.number|int > 0 and rule.action == 'deny'  %}
-            #Check if flow of packets is allowed or not
-            if self.firewallManager.getCurrentCount(currentEvent) >= {{rule.number}} and sinceLastEventDuration < WINDOW_SIZE_IN_SECONDS:
-                return self.__drop(currentEvent,packet)
-            elif sinceLastEventDuration > WINDOW_SIZE_IN_SECONDS: # After a certain time counters go down
-                self.firewallManager.resetCounters(currentEvent)
-            else: # number of packet flows is inferior of limit during window
-                return True{% else %}
+    def {{handler}}(self,packet):{%if handler in ['onMasterWriteCommand','onSlaveHandleValueNotification','onMasterWriteRequest'] %}
+        packetType = type(packet.value){% for rule in properRules[handler] %}
+        valueInFile = self.compareCorrectValue(packetType,'{{rule.value}}')
+        if packet.handle == {{rule.handle}} and valueInFile in packet.value :{% if rule.action == 'deny' %}
+            #Deny packet
+            return self.__drop(currentEvent,packet){% else %}
             # packet is allowed
-            return True
+            return True {% endif %}{% endfor %}
         else : #default case of the rule
-            return {{'self.__drop(currentEvent,packet)' if not BleTable.default else True}} {% endif %}{% endfor %}{%elif handler in ['onMasterPairingRequest','onSlavePairingResponse']%}
+            return {{'self.__drop(currentEvent,packet)' if not default else True}}{%elif handler in ['onMasterPairingRequest','onSlavePairingResponse']%}
         # Check if we accept use LeSecureConnections or Legacy {% set parameter = 'packet' if handler == 'onMasterPairingRequest' else 'packet, True' %}
         checkSecureConnectionRuleOK =  self.checkSecureConnection({{parameter}})
         #Check OoB
@@ -208,14 +203,16 @@ class mitm_test(scenario.Scenario):
         # Check minKeySize
         checkSizeRuleOK = self.checkSizeRule({{parameter}})
         checkMitmRuleOK = self.checkMiTMRule({{parameter}})
-        return checkSecureConnectionRuleOK and checkOoBRuleOK and checkSizeRuleOK and checkMitmRuleOK
+        forwardPacket = checkSecureConnectionRuleOK and checkOoBRuleOK and checkSizeRuleOK and checkMitmRuleOK and self.toAllow
+        if not forwardPacket:
+            io.info("Due to specified rules, the pairing request has not been forwarded")
+        return forwardPacket
         {% endif %}
 {% endfor %}
     # Drop packets and reset counter of packets after drops
     def __drop(self, name: str,packet):
         io.info("According to our firewall policy we choose to drop the following packet")
         io.info(packet)
-        self.firewallManager.resetCounters(name)
         return False
 
     def getEventName(self, handle: hex, value: hex, handlerName: str):

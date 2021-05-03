@@ -1,0 +1,9 @@
+BLE_TABLES
+TARGET FC:58:FA:04:04:13
+action allow type BLEWriteCommand handle 0x29 value 0x2
+action allow type BLEWriteCommand handle 0x29 value 0x0 
+action deny type BLEHandleValueNotification handle 0x25 value 0x1
+action deny type BLEWriteRequest handle 0xb value 6f7171
+action deny type BLEWriteRequest handle 0xb value 8f
+default deny
+END BLE_TABLES
